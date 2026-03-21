@@ -1,6 +1,4 @@
-"""
-Django settings for blogproject.
-"""
+"""Django settings for blogproject."""
 from pathlib import Path
 import os
 from dotenv import load_dotenv
@@ -57,17 +55,6 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'blogproject.wsgi.application'
 
-# DATABASES = {
-#     'default': {
-#         'ENGINE': 'django.db.backends.postgresql',
-#         'NAME': os.getenv('DB_NAME', 'blogdb'),
-#         'USER': os.getenv('DB_USER', 'bloguser'),
-#         'PASSWORD': os.getenv('DB_PASSWORD', 'blogpassword'),
-#         'HOST': os.getenv('DB_HOST', 'localhost'),
-#         'PORT': os.getenv('DB_PORT', '5432'),
-#     }
-# }
-
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
@@ -98,6 +85,10 @@ MAX_UPLOAD_SIZE = 10 * 1024 * 1024  # 10 MB
 MAX_IMAGE_SIZE = 5 * 1024 * 1024    # 5 MB
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+AUTHENTICATION_BACKENDS = [
+    'blogapp.backends.EmailBackend',
+]
 
 CRISPY_ALLOWED_TEMPLATE_PACKS = 'bootstrap5'
 CRISPY_TEMPLATE_PACK = 'bootstrap5'

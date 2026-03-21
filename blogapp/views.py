@@ -15,18 +15,19 @@ from .forms import (
 )
 
 
-# ─── Auth ───────────────────────────────────────────────────────────────────
+# ─── Auth ────────────────────────────────────────────────────────────────────
 
 @login_required
 def register_view(request):
+    """Admin-only view for creating new user accounts."""
     if not request.user.is_staff:
-        messages.error(request, 'Регистрация новых пользователей доступна только администратору.')
+        messages.error(request, 'Only administrators can register new users.')
         return redirect('home')
     if request.method == 'POST':
         form = RegistrationForm(request.POST)
         if form.is_valid():
             form.save()
-            messages.success(request, f'Пользователь «{form.cleaned_data["username"]}» успешно создан.')
+            messages.success(request, f'User "{form.cleaned_data["username"]}" created successfully.')
             return redirect('register')
     else:
         form = RegistrationForm()
@@ -37,14 +38,19 @@ def login_view(request):
     if request.user.is_authenticated:
         return redirect('home')
     if request.method == 'POST':
-        form = LoginForm(request, data=request.POST)
+        form = LoginForm(request.POST)
         if form.is_valid():
-            user = form.get_user()
-            login(request, user)
-            next_url = request.GET.get('next', 'home')
-            return redirect(next_url)
-        else:
-            messages.error(request, 'Неверный email/логин или пароль.')
+            user = authenticate(
+                request,
+                email=form.cleaned_data['email'],
+                password=form.cleaned_data['password'],
+            )
+            if user is not None:
+                login(request, user)
+                next_url = request.GET.get('next', 'home')
+                return redirect(next_url)
+            else:
+                messages.error(request, 'Invalid email or password.')
     else:
         form = LoginForm()
     return render(request, 'blogapp/auth/login.html', {'form': form})
@@ -55,7 +61,7 @@ def logout_view(request):
     return redirect('home')
 
 
-# ─── Home / Search ──────────────────────────────────────────────────────────
+# ─── Home / Search ───────────────────────────────────────────────────────────
 
 def home(request):
     search_form = SearchForm(request.GET or None)
@@ -71,7 +77,7 @@ def home(request):
     else:
         visible_blogs = public_blogs
 
-    # Latest posts from visible blogs
+    # Latest posts from all blogs visible to the current user
     posts_qs = Post.objects.filter(
         blog__in=visible_blogs, is_published=True
     ).select_related('author', 'blog').prefetch_related('tags')
@@ -88,7 +94,6 @@ def home(request):
     page = request.GET.get('page')
     posts = paginator.get_page(page)
 
-    # Blogs sidebar
     blogs = visible_blogs.order_by('-created_at')[:8]
     popular_tags = Tag.objects.filter(
         post__blog__in=visible_blogs,
@@ -104,7 +109,7 @@ def home(request):
     })
 
 
-# ─── Blogs ──────────────────────────────────────────────────────────────────
+# ─── Blogs ───────────────────────────────────────────────────────────────────
 
 def blog_list(request):
     if request.user.is_authenticated:
@@ -162,11 +167,11 @@ def blog_create(request):
             blog.owner = request.user
             blog.save()
             form.save_m2m()
-            messages.success(request, 'Блог успешно создан!')
+            messages.success(request, 'Blog created successfully!')
             return redirect('blog_detail', pk=blog.pk)
     else:
         form = BlogForm(owner=request.user)
-    return render(request, 'blogapp/blog/form.html', {'form': form, 'action': 'Создать блог'})
+    return render(request, 'blogapp/blog/form.html', {'form': form, 'action': 'Create blog'})
 
 
 @login_required
@@ -176,11 +181,11 @@ def blog_edit(request, pk):
         form = BlogForm(request.POST, request.FILES, instance=blog, owner=request.user)
         if form.is_valid():
             form.save()
-            messages.success(request, 'Блог обновлён!')
+            messages.success(request, 'Blog updated!')
             return redirect('blog_detail', pk=blog.pk)
     else:
         form = BlogForm(instance=blog, owner=request.user)
-    return render(request, 'blogapp/blog/form.html', {'form': form, 'blog': blog, 'action': 'Редактировать блог'})
+    return render(request, 'blogapp/blog/form.html', {'form': form, 'blog': blog, 'action': 'Edit blog'})
 
 
 @login_required
@@ -188,12 +193,12 @@ def blog_delete(request, pk):
     blog = get_object_or_404(Blog, pk=pk, owner=request.user)
     if request.method == 'POST':
         blog.delete()
-        messages.success(request, 'Блог удалён.')
+        messages.success(request, 'Blog deleted.')
         return redirect('blog_list')
     return render(request, 'blogapp/blog/delete_confirm.html', {'blog': blog})
 
 
-# ─── Members ────────────────────────────────────────────────────────────────
+# ─── Members ─────────────────────────────────────────────────────────────────
 
 @login_required
 @require_POST
@@ -205,9 +210,9 @@ def blog_add_member(request, pk):
     if form.is_valid():
         user = form.cleaned_data['user']
         blog.members.add(user)
-        messages.success(request, f'Пользователь {user.username} добавлен в участники.')
+        messages.success(request, f'User {user.username} added as a member.')
     else:
-        messages.error(request, 'Не удалось добавить участника.')
+        messages.error(request, 'Could not add member.')
     return redirect('blog_detail', pk=blog.pk)
 
 
@@ -216,10 +221,10 @@ def blog_add_member(request, pk):
 def blog_leave(request, pk):
     blog = get_object_or_404(Blog, pk=pk)
     if blog.owner == request.user:
-        messages.error(request, 'Владелец не может покинуть свой блог.')
+        messages.error(request, 'The owner cannot leave their own blog.')
         return redirect('blog_detail', pk=blog.pk)
     blog.members.remove(request.user)
-    messages.success(request, f'Вы покинули блог «{blog.title}».')
+    messages.success(request, f'You have left the blog "{blog.title}".')
     return redirect('blog_list')
 
 
@@ -227,17 +232,17 @@ def blog_leave(request, pk):
 @require_POST
 def blog_remove_member(request, pk, user_id):
     blog = get_object_or_404(Blog, pk=pk)
-    # Owner can remove anyone; member can remove themselves
     target = get_object_or_404(User, pk=user_id)
+    # Owner can remove anyone; a member can remove themselves
     if request.user == blog.owner or request.user == target:
         blog.members.remove(target)
-        messages.success(request, f'Участник {target.username} удалён из блога.')
+        messages.success(request, f'Member {target.username} removed from the blog.')
     else:
-        messages.error(request, 'Нет прав для этого действия.')
+        messages.error(request, 'You do not have permission to do this.')
     return redirect('blog_detail', pk=blog.pk)
 
 
-# ─── Posts ──────────────────────────────────────────────────────────────────
+# ─── Posts ───────────────────────────────────────────────────────────────────
 
 def post_detail(request, pk):
     post = get_object_or_404(Post, pk=pk, is_published=True)
@@ -257,7 +262,7 @@ def post_detail(request, pk):
             comment.post = post
             comment.author = request.user
             comment.save()
-            messages.success(request, 'Комментарий добавлен.')
+            messages.success(request, 'Comment added.')
             return redirect('post_detail', pk=post.pk)
 
     can_edit = request.user == post.author or request.user == post.blog.owner
@@ -274,7 +279,7 @@ def post_detail(request, pk):
 def post_create(request, blog_pk):
     blog = get_object_or_404(Blog, pk=blog_pk)
     if not blog.can_post(request.user):
-        messages.error(request, 'У вас нет прав для публикации в этом блоге.')
+        messages.error(request, 'You do not have permission to post in this blog.')
         return redirect('blog_detail', pk=blog_pk)
 
     if request.method == 'POST':
@@ -286,10 +291,10 @@ def post_create(request, blog_pk):
             post.save()
             form.save_tags(post)
 
-            # Handle multiple file uploads
+            # Handle multiple file attachments
             for f in request.FILES.getlist('post_files'):
                 if f.size > 10 * 1024 * 1024:
-                    messages.warning(request, f'Файл "{f.name}" пропущен: превышен лимит 10 МБ.')
+                    messages.warning(request, f'File "{f.name}" skipped: exceeds the 10 MB limit.')
                     continue
                 PostFile.objects.create(
                     post=post,
@@ -298,13 +303,13 @@ def post_create(request, blog_pk):
                     size=f.size
                 )
 
-            messages.success(request, 'Пост опубликован!')
+            messages.success(request, 'Post published!')
             return redirect('post_detail', pk=post.pk)
     else:
         form = PostForm()
 
     return render(request, 'blogapp/post/form.html', {
-        'form': form, 'blog': blog, 'action': 'Новый пост'
+        'form': form, 'blog': blog, 'action': 'New post'
     })
 
 
@@ -312,7 +317,7 @@ def post_create(request, blog_pk):
 def post_edit(request, pk):
     post = get_object_or_404(Post, pk=pk)
     if request.user != post.author and request.user != post.blog.owner:
-        messages.error(request, 'Нет прав для редактирования.')
+        messages.error(request, 'You do not have permission to edit this post.')
         return redirect('post_detail', pk=pk)
 
     if request.method == 'POST':
@@ -323,20 +328,20 @@ def post_edit(request, pk):
 
             for f in request.FILES.getlist('post_files'):
                 if f.size > 10 * 1024 * 1024:
-                    messages.warning(request, f'Файл "{f.name}" пропущен: превышен лимит 10 МБ.')
+                    messages.warning(request, f'File "{f.name}" skipped: exceeds the 10 MB limit.')
                     continue
                 PostFile.objects.create(
                     post=post, file=f, original_name=f.name, size=f.size
                 )
 
-            messages.success(request, 'Пост обновлён!')
+            messages.success(request, 'Post updated!')
             return redirect('post_detail', pk=post.pk)
     else:
         tags_str = ', '.join(post.tags.values_list('name', flat=True))
         form = PostForm(instance=post, initial={'tags_input': tags_str})
 
     return render(request, 'blogapp/post/form.html', {
-        'form': form, 'post': post, 'blog': post.blog, 'action': 'Редактировать пост'
+        'form': form, 'post': post, 'blog': post.blog, 'action': 'Edit post'
     })
 
 
@@ -344,12 +349,12 @@ def post_edit(request, pk):
 def post_delete(request, pk):
     post = get_object_or_404(Post, pk=pk)
     if request.user != post.author and request.user != post.blog.owner:
-        messages.error(request, 'Нет прав для удаления.')
+        messages.error(request, 'You do not have permission to delete this post.')
         return redirect('post_detail', pk=pk)
     blog_pk = post.blog.pk
     if request.method == 'POST':
         post.delete()
-        messages.success(request, 'Пост удалён.')
+        messages.success(request, 'Post deleted.')
         return redirect('blog_detail', pk=blog_pk)
     return render(request, 'blogapp/post/delete_confirm.html', {'post': post})
 
@@ -360,15 +365,15 @@ def delete_file(request, file_pk):
     pf = get_object_or_404(PostFile, pk=file_pk)
     post = pf.post
     if request.user != post.author and request.user != post.blog.owner:
-        messages.error(request, 'Нет прав для удаления файла.')
+        messages.error(request, 'You do not have permission to delete this file.')
         return redirect('post_detail', pk=post.pk)
     pf.file.delete(save=False)
     pf.delete()
-    messages.success(request, 'Файл удалён.')
+    messages.success(request, 'File deleted.')
     return redirect('post_edit', pk=post.pk)
 
 
-# ─── Tags ───────────────────────────────────────────────────────────────────
+# ─── Tags ─────────────────────────────────────────────────────────────────────
 
 def tag_posts(request, slug):
     tag = get_object_or_404(Tag, slug=slug)
@@ -394,7 +399,7 @@ def tag_posts(request, slug):
     })
 
 
-# ─── Profile ────────────────────────────────────────────────────────────────
+# ─── Profile ──────────────────────────────────────────────────────────────────
 
 def profile(request, username):
     profile_user = get_object_or_404(User, username=username)
@@ -407,9 +412,7 @@ def profile(request, username):
     else:
         visible_blogs = Blog.objects.filter(is_public=True)
 
-    user_blogs = Blog.objects.filter(owner=profile_user).filter(
-        pk__in=visible_blogs
-    )
+    user_blogs = Blog.objects.filter(owner=profile_user).filter(pk__in=visible_blogs)
     user_posts = Post.objects.filter(
         author=profile_user, blog__in=visible_blogs, is_published=True
     ).select_related('blog')[:10]
