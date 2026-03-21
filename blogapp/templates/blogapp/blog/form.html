@@ -1,0 +1,80 @@
+{% extends 'blogapp/base.html' %}
+{% block title %}{{ action }} — BlogForest{% endblock %}
+
+{% block content %}
+<div class="page-hero">
+  <div class="container">
+    <h1>{{ action }}</h1>
+  </div>
+</div>
+
+<div class="container content-full">
+  <div style="max-width:720px; margin:0 auto;">
+    <div class="card">
+      <div class="card-body">
+        <form method="post" enctype="multipart/form-data" novalidate>
+          {% csrf_token %}
+
+          <div class="form-group">
+            <label class="form-label" for="{{ form.title.id_for_label }}">{{ form.title.label }}</label>
+            {{ form.title }}
+            {% if form.title.errors %}<ul class="errorlist">{% for e in form.title.errors %}<li>{{ e }}</li>{% endfor %}</ul>{% endif %}
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="{{ form.description.id_for_label }}">{{ form.description.label }}</label>
+            {{ form.description }}
+            {% if form.description.errors %}<ul class="errorlist">{% for e in form.description.errors %}<li>{{ e }}</li>{% endfor %}</ul>{% endif %}
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="{{ form.cover.id_for_label }}">{{ form.cover.label }}</label>
+            {% if blog.cover %}
+            <div style="margin-bottom:10px;">
+              <img src="{{ blog.cover.url }}" alt="Обложка" style="height:80px; border-radius:8px; object-fit:cover;">
+            </div>
+            {% endif %}
+            {{ form.cover }}
+            <div class="form-text">Максимум 5 МБ. Рекомендуемый размер: 1200×400 px.</div>
+            {% if form.cover.errors %}<ul class="errorlist">{% for e in form.cover.errors %}<li>{{ e }}</li>{% endfor %}</ul>{% endif %}
+          </div>
+
+          <div class="form-group">
+            <div class="form-check">
+              {{ form.is_public }}
+              <label for="{{ form.is_public.id_for_label }}" class="form-label mb-0" style="cursor:pointer;">
+                {{ form.is_public.label }}
+              </label>
+            </div>
+            <div class="form-text">Открытый блог виден всем посетителям. Закрытый — только участникам.</div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">{{ form.members.label }}</label>
+            <div class="member-checkbox-list">
+              {% for choice in form.members %}
+              <label>
+                {{ choice.tag }}
+                {{ choice.choice_label }}
+              </label>
+              {% empty %}
+              <p class="text-muted text-sm">Нет других пользователей.</p>
+              {% endfor %}
+            </div>
+            <div class="form-text">Выбранные пользователи смогут читать и писать посты в этом блоге.</div>
+          </div>
+
+          <div style="display:flex; gap:12px; flex-wrap:wrap; margin-top:8px;">
+            <button type="submit" class="btn btn-primary btn-lg">{{ action }}</button>
+            {% if blog %}
+            <a href="{{ blog.get_absolute_url }}" class="btn btn-ghost btn-lg">Отмена</a>
+            {% else %}
+            <a href="{% url 'blog_list' %}" class="btn btn-ghost btn-lg">Отмена</a>
+            {% endif %}
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,57 @@
+{% extends 'blogapp/base.html' %}
+{% block title %}#{{ tag.name }} — BlogForest{% endblock %}
+
+{% block content %}
+<div class="page-hero">
+  <div class="container">
+    <h1>Тег: #{{ tag.name }}</h1>
+    <p>Постов: {{ posts.paginator.count }}</p>
+  </div>
+</div>
+
+<div class="container content-full">
+  {% for post in posts %}
+  <article class="card post-card">
+    {% if post.image %}
+    <img src="{{ post.image.url }}" alt="{{ post.title }}" class="post-card-cover">
+    {% endif %}
+    <div class="card-body">
+      <div class="post-card-meta">
+        <span class="badge {% if post.blog.is_public %}badge-green{% else %}badge-lock{% endif %}">
+          <a href="{{ post.blog.get_absolute_url }}" style="color:inherit;">{{ post.blog.title }}</a>
+        </span>
+        <span class="text-muted text-sm">{{ post.created_at|date:"d M Y" }}</span>
+      </div>
+      <h2 class="post-card-title">
+        <a href="{{ post.get_absolute_url }}">{{ post.title }}</a>
+      </h2>
+      <p class="post-card-excerpt">{{ post.content|truncatewords:40 }}</p>
+    </div>
+    <div class="card-footer">
+      <div class="flex items-center gap-2">
+        <div class="avatar" style="width:24px;height:24px;font-size:.7rem;">{{ post.author.username|first|upper }}</div>
+        <a href="{% url 'profile' post.author.username %}" class="text-sm">{{ post.author.username }}</a>
+      </div>
+    </div>
+  </article>
+  {% empty %}
+  <div class="card">
+    <div class="card-body" style="text-align:center; padding:40px;">
+      <p class="text-muted">Постов с этим тегом не найдено.</p>
+    </div>
+  </div>
+  {% endfor %}
+
+  {% if posts.has_other_pages %}
+  <div class="pagination">
+    {% if posts.has_previous %}<a href="?page={{ posts.previous_page_number }}">‹</a>{% endif %}
+    {% for i in posts.paginator.page_range %}
+      {% if posts.number == i %}<span class="current">{{ i }}</span>
+      {% elif i > posts.number|add:'-3' and i < posts.number|add:'3' %}
+      <a href="?page={{ i }}">{{ i }}</a>{% endif %}
+    {% endfor %}
+    {% if posts.has_next %}<a href="?page={{ posts.next_page_number }}">›</a>{% endif %}
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

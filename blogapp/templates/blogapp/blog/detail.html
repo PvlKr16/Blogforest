@@ -1,0 +1,177 @@
+{% extends 'blogapp/base.html' %}
+{% block title %}{{ blog.title }} — BlogForest{% endblock %}
+
+{% block content %}
+<div class="container content-full">
+
+  <!-- Blog hero -->
+  <div class="blog-hero">
+    {% if blog.cover %}
+    <img src="{{ blog.cover.url }}" alt="{{ blog.title }}" class="blog-hero-cover">
+    {% endif %}
+    <div class="blog-hero-content">
+      <div style="margin-bottom:8px;">
+        <span class="badge {% if blog.is_public %}badge-green{% else %}badge-lock{% endif %}"
+              style="background:rgba(255,255,255,.2); border-color:rgba(255,255,255,.4); color:#fff;">
+          {% if blog.is_public %}🌿 Открытый{% else %}🔒 Закрытый{% endif %}
+        </span>
+      </div>
+      <h1>{{ blog.title }}</h1>
+      <div class="blog-hero-meta">
+        Автор: <a href="{% url 'profile' blog.owner.username %}" style="color:rgba(255,255,255,.9);">{{ blog.owner.username }}</a>
+        &nbsp;·&nbsp; Создан: {{ blog.created_at|date:"d M Y" }}
+        &nbsp;·&nbsp; Постов: {{ blog.posts.count }}
+      </div>
+    </div>
+  </div>
+
+  {% if blog.description %}
+  <p class="text-muted" style="margin-bottom:24px;">{{ blog.description }}</p>
+  {% endif %}
+
+  <div class="content-grid">
+    <!-- Posts -->
+    <div>
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; flex-wrap:wrap; gap:10px;">
+        <h2 style="font-size:1.2rem;">Посты</h2>
+        {% if can_post %}
+        <a href="{% url 'post_create' blog.pk %}" class="btn btn-primary btn-sm">+ Новый пост</a>
+        {% endif %}
+      </div>
+
+      {% for post in posts %}
+      <article class="card post-card">
+        {% if post.image %}
+        <img src="{{ post.image.url }}" alt="{{ post.title }}" class="post-card-cover">
+        {% endif %}
+        <div class="card-body">
+          <div class="post-card-meta">
+            <span class="text-muted text-sm">{{ post.created_at|date:"d M Y" }}</span>
+          </div>
+          <h3 class="post-card-title">
+            <a href="{{ post.get_absolute_url }}">{{ post.title }}</a>
+          </h3>
+          <p class="post-card-excerpt">{{ post.content|truncatewords:35 }}</p>
+          {% if post.tags.all %}
+          <div class="flex flex-wrap gap-2 mt-3">
+            {% for tag in post.tags.all %}
+            <a href="{% url 'tag_posts' tag.slug %}" class="tag-pill">{{ tag.name }}</a>
+            {% endfor %}
+          </div>
+          {% endif %}
+        </div>
+        <div class="card-footer">
+          <div class="flex items-center gap-2">
+            <div class="avatar" style="width:24px;height:24px;font-size:.7rem;">
+              {{ post.author.username|first|upper }}
+            </div>
+            <a href="{% url 'profile' post.author.username %}" class="text-sm">{{ post.author.username }}</a>
+            <span class="text-muted text-sm" style="margin-left:auto;">💬 {{ post.comments.count }}</span>
+          </div>
+        </div>
+      </article>
+      {% empty %}
+      <div class="card">
+        <div class="card-body" style="text-align:center; padding:36px;">
+          <div style="font-size:2.5rem; margin-bottom:10px;">✏️</div>
+          <p class="text-muted">В этом блоге пока нет постов.</p>
+          {% if can_post %}
+          <a href="{% url 'post_create' blog.pk %}" class="btn btn-primary mt-4">Написать первый пост</a>
+          {% endif %}
+        </div>
+      </div>
+      {% endfor %}
+
+      {% if posts.has_other_pages %}
+      <div class="pagination">
+        {% if posts.has_previous %}<a href="?page={{ posts.previous_page_number }}">‹</a>{% endif %}
+        {% for i in posts.paginator.page_range %}
+          {% if posts.number == i %}<span class="current">{{ i }}</span>
+          {% elif i > posts.number|add:'-3' and i < posts.number|add:'3' %}
+          <a href="?page={{ i }}">{{ i }}</a>{% endif %}
+        {% endfor %}
+        {% if posts.has_next %}<a href="?page={{ posts.next_page_number }}">›</a>{% endif %}
+      </div>
+      {% endif %}
+    </div>
+
+    <!-- Sidebar -->
+    <aside class="sidebar">
+
+      <!-- Actions -->
+      {% if is_owner %}
+      <div class="sidebar-widget">
+        <div class="sidebar-widget-head">Управление</div>
+        <div class="sidebar-widget-body" style="display:flex; flex-direction:column; gap:8px;">
+          <a href="{% url 'blog_edit' blog.pk %}" class="btn btn-outline btn-sm">✏️ Редактировать</a>
+          <a href="{% url 'blog_delete' blog.pk %}" class="btn btn-ghost btn-sm" style="color:#c0392b; border-color:#f5c2c0;">🗑 Удалить блог</a>
+        </div>
+      </div>
+      {% elif is_member %}
+      <div class="sidebar-widget">
+        <div class="sidebar-widget-body">
+          <form method="post" action="{% url 'blog_leave' blog.pk %}"
+                onsubmit="return confirm('Покинуть блог «{{ blog.title }}»?')">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-ghost btn-sm w-full" style="color:#c0392b; border-color:#f5c2c0;">
+              Покинуть блог
+            </button>
+          </form>
+        </div>
+      </div>
+      {% endif %}
+
+      <!-- Members -->
+      <div class="sidebar-widget">
+        <div class="sidebar-widget-head">Участники ({{ members.count }})</div>
+        <div class="sidebar-widget-body">
+          <!-- Owner -->
+          <div class="member-row" style="margin-bottom:8px;">
+            <div class="avatar">{{ blog.owner.username|first|upper }}</div>
+            <div class="member-name">
+              <a href="{% url 'profile' blog.owner.username %}">{{ blog.owner.username }}</a>
+            </div>
+            <span class="badge badge-green" style="font-size:.7rem;">Владелец</span>
+          </div>
+          <!-- Members -->
+          <div class="members-list">
+            {% for member in members %}
+            <div class="member-row">
+              <div class="avatar">{{ member.username|first|upper }}</div>
+              <div class="member-name">
+                <a href="{% url 'profile' member.username %}">{{ member.username }}</a>
+              </div>
+              {% if user.is_authenticated %}
+                {% if user == blog.owner or user == member %}
+                <form method="post" action="{% url 'blog_remove_member' blog.pk member.pk %}" style="margin:0;">
+                  {% csrf_token %}
+                  <button type="submit" class="btn btn-ghost btn-sm"
+                          style="padding:2px 7px; font-size:.75rem; color:#c0392b; border-color:#f5c2c0;"
+                          title="Удалить участника"
+                          onclick="return confirm('Удалить {{ member.username }} из участников?')">✕</button>
+                </form>
+                {% endif %}
+              {% endif %}
+            </div>
+            {% empty %}
+            <p class="text-muted text-sm">Нет участников.</p>
+            {% endfor %}
+          </div>
+
+          <!-- Add member form (any authenticated user) -->
+          {% if user.is_authenticated %}
+          <hr class="divider" style="margin:14px 0;">
+          <p class="text-sm" style="font-weight:600; margin-bottom:8px; color:var(--text-secondary);">Добавить участника</p>
+          <form method="post" action="{% url 'blog_add_member' blog.pk %}">
+            {% csrf_token %}
+            {{ add_member_form.user }}
+            <button type="submit" class="btn btn-outline btn-sm w-full mt-3">Добавить</button>
+          </form>
+          {% endif %}
+        </div>
+      </div>
+
+    </aside>
+  </div>
+</div>
+{% endblock %}

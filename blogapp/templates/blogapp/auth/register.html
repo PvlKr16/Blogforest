@@ -1,0 +1,35 @@
+{% extends 'blogapp/base.html' %}
+{% block title %}Регистрация — BlogForest{% endblock %}
+
+{% block content %}
+<div class="container">
+  <div class="auth-card" style="max-width:500px;">
+    <div class="auth-card-head">
+      <h2>Создать аккаунт</h2>
+      <p>Присоединяйтесь к BlogForest</p>
+    </div>
+    <div class="auth-card-body">
+      <form method="post" novalidate>
+        {% csrf_token %}
+        {% for field in form %}
+        <div class="form-group">
+          <label class="form-label" for="{{ field.id_for_label }}">{{ field.label }}</label>
+          {{ field }}
+          {% if field.help_text %}
+          <div class="form-text">{{ field.help_text }}</div>
+          {% endif %}
+          {% if field.errors %}
+          <ul class="errorlist">{% for e in field.errors %}<li>{{ e }}</li>{% endfor %}</ul>
+          {% endif %}
+        </div>
+        {% endfor %}
+        <button type="submit" class="btn btn-primary w-full btn-lg">Зарегистрироваться</button>
+      </form>
+      <hr class="divider">
+      <p class="text-sm" style="text-align:center; color: var(--text-muted);">
+        Уже есть аккаунт? <a href="{% url 'login' %}">Войти</a>
+      </p>
+    </div>
+  </div>
+</div>
+{% endblock %}

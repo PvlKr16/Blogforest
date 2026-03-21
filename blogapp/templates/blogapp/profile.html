@@ -1,0 +1,74 @@
+{% extends 'blogapp/base.html' %}
+{% block title %}{{ profile_user.username }} — BlogForest{% endblock %}
+
+{% block content %}
+<div class="page-hero">
+  <div class="container">
+    <div class="flex items-center gap-3">
+      <div class="avatar avatar-lg">{{ profile_user.username|first|upper }}</div>
+      <div>
+        <h1>{{ profile_user.get_full_name|default:profile_user.username }}</h1>
+        <p>@{{ profile_user.username }} · С нами с {{ profile_user.date_joined|date:"M Y" }}</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="container">
+  <div class="content-grid">
+    <!-- Posts -->
+    <div>
+      <h2 style="font-size:1.2rem; margin-bottom:16px;">Последние посты</h2>
+      {% for post in user_posts %}
+      <article class="card post-card">
+        <div class="card-body">
+          <div class="post-card-meta">
+            <span class="badge badge-stone">
+              <a href="{{ post.blog.get_absolute_url }}" style="color:inherit;">{{ post.blog.title }}</a>
+            </span>
+            <span class="text-muted text-sm">{{ post.created_at|date:"d M Y" }}</span>
+          </div>
+          <h3 class="post-card-title">
+            <a href="{{ post.get_absolute_url }}">{{ post.title }}</a>
+          </h3>
+          <p class="post-card-excerpt">{{ post.content|truncatewords:30 }}</p>
+        </div>
+      </article>
+      {% empty %}
+      <div class="card">
+        <div class="card-body" style="text-align:center; padding:36px;">
+          <p class="text-muted">Постов пока нет.</p>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="sidebar-widget">
+        <div class="sidebar-widget-head">Блоги автора</div>
+        <div class="sidebar-widget-body">
+          {% for blog in user_blogs %}
+          <div class="sidebar-blog-item">
+            <div class="sidebar-blog-cover">
+              {% if blog.cover %}<img src="{{ blog.cover.url }}" alt="">{% endif %}
+            </div>
+            <div>
+              <div class="sidebar-blog-name">
+                <a href="{{ blog.get_absolute_url }}">{{ blog.title }}</a>
+              </div>
+              <div class="sidebar-blog-sub">
+                {% if blog.is_public %}🌿 Открытый{% else %}🔒 Закрытый{% endif %}
+                · {{ blog.posts.count }} постов
+              </div>
+            </div>
+          </div>
+          {% empty %}
+          <p class="text-muted text-sm">Блогов нет.</p>
+          {% endfor %}
+        </div>
+      </div>
+    </aside>
+  </div>
+</div>
+{% endblock %}

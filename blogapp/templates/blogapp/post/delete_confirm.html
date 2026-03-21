@@ -1,0 +1,23 @@
+{% extends 'blogapp/base.html' %}
+{% block title %}Удалить пост — BlogForest{% endblock %}
+
+{% block content %}
+<div class="container content-full">
+  <div style="max-width:480px; margin:0 auto;">
+    <div class="card">
+      <div class="card-body" style="text-align:center; padding:40px 32px;">
+        <div style="font-size:3rem; margin-bottom:16px;">🗑️</div>
+        <h2 style="margin-bottom:10px;">Удалить пост?</h2>
+        <p class="text-muted">Вы собираетесь удалить пост <strong>«{{ post.title }}»</strong>. Все комментарии и файлы также будут удалены.</p>
+        <div style="display:flex; gap:12px; justify-content:center; margin-top:28px; flex-wrap:wrap;">
+          <form method="post">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-danger btn-lg">Да, удалить</button>
+          </form>
+          <a href="{{ post.get_absolute_url }}" class="btn btn-ghost btn-lg">Отмена</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
