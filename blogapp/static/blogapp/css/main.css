@@ -1,5 +1,5 @@
 /* ================================================================
-   BLOGFOREST — Soft Green · Stone · Bark
+   BLOGFOREST — Emerald · Slate · Obsidian
    Fonts: Lora (display) + Source Serif 4 (body)
    ================================================================ */
 
@@ -7,37 +7,37 @@
 
 /* ── Variables ──────────────────────────────────────────────── */
 :root {
-  --green-deep:   #3d5a47;
-  --green-mid:    #5a7c65;
-  --green-soft:   #8aab8f;
-  --green-pale:   #c8dcc7;
-  --green-mist:   #eaf2e8;
+  --green-deep:   #065f46;
+  --green-mid:    #047857;
+  --green-soft:   #34d399;
+  --green-pale:   #a7f3d0;
+  --green-mist:   #d1fae5;
 
-  --stone-dark:   #5c5750;
-  --stone-mid:    #8c8278;
-  --stone-soft:   #b8b0a4;
-  --stone-pale:   #e0d9d0;
-  --stone-mist:   #f5f2ee;
+  --stone-dark:   #1e293b;
+  --stone-mid:    #475569;
+  --stone-soft:   #94a3b8;
+  --stone-pale:   #cbd5e1;
+  --stone-mist:   #f1f5f9;
 
-  --bark-dark:    #5c4a35;
-  --bark-mid:     #8b6f52;
-  --bark-soft:    #b99470;
-  --bark-pale:    #ddc9b0;
-  --bark-mist:    #f7f0e6;
+  --bark-dark:    #0f172a;
+  --bark-mid:     #1e293b;
+  --bark-soft:    #334155;
+  --bark-pale:    #64748b;
+  --bark-mist:    #f8fafc;
 
-  --text-primary:   #2d2926;
-  --text-secondary: #5c5750;
-  --text-muted:     #9c9188;
-  --text-light:     #f5f2ee;
+  --text-primary:   #0f172a;
+  --text-secondary: #1e293b;
+  --text-muted:     #64748b;
+  --text-light:     #f0fdf4;
 
-  --surface:        #faf8f5;
+  --surface:        #f0fdf4;
   --surface-card:   #ffffff;
-  --border:         #ddd5c8;
-  --border-light:   #ece7df;
+  --border:         #a7f3d0;
+  --border-light:   #d1fae5;
 
-  --shadow-sm:  0 1px 3px rgba(60,45,30,.08);
-  --shadow-md:  0 4px 16px rgba(60,45,30,.10);
-  --shadow-lg:  0 8px 32px rgba(60,45,30,.13);
+  --shadow-sm:  0 1px 3px rgba(6,95,70,.08);
+  --shadow-md:  0 4px 16px rgba(6,95,70,.12);
+  --shadow-lg:  0 8px 32px rgba(6,95,70,.16);
 
   --radius-sm:  6px;
   --radius-md:  12px;
@@ -96,7 +96,7 @@ h1,h2,h3,h4,h5,h6 {
 
 /* ── Header ─────────────────────────────────────────────────── */
 .site-header {
-  background: var(--green-deep);
+  background: linear-gradient(135deg, #064e3b 0%, #065f46 100%);
   height: var(--header-h);
   position: sticky;
   top: 0;
@@ -174,13 +174,13 @@ h1,h2,h3,h4,h5,h6 {
 .nav-link:hover { background: rgba(255,255,255,.12); color: #fff; }
 
 .nav-btn {
-  background: var(--green-pale);
-  color: var(--green-deep) !important;
+  background: var(--green-soft);
+  color: #064e3b !important;
   font-weight: 600;
   padding: 6px 14px;
   border-radius: var(--radius-sm);
 }
-.nav-btn:hover { background: #fff; color: var(--green-deep) !important; }
+.nav-btn:hover { background: #ecfdf5; color: #064e3b !important; }
 
 /* Mobile menu toggle */
 .burger {
@@ -204,7 +204,7 @@ h1,h2,h3,h4,h5,h6 {
 
 /* ── Hero / Page Title ──────────────────────────────────────── */
 .page-hero {
-  background: linear-gradient(135deg, var(--green-deep) 0%, var(--green-mid) 60%, var(--bark-mid) 100%);
+  background: linear-gradient(135deg, #065f46 0%, #047857 55%, #064e3b 100%);
   padding: 48px 0 36px;
   position: relative;
   overflow: hidden;
@@ -291,7 +291,7 @@ h1,h2,h3,h4,h5,h6 {
 
 .blog-card .cover {
   height: 140px;
-  background: linear-gradient(135deg, var(--green-pale), var(--bark-pale));
+  background: linear-gradient(135deg, var(--green-pale), var(--stone-pale));
   overflow: hidden;
 }
 .blog-card .cover img { width: 100%; height: 100%; object-fit: cover; }
@@ -309,7 +309,7 @@ h1,h2,h3,h4,h5,h6 {
   line-height: 1.6;
   letter-spacing: .3px;
 }
-.badge-green { background: var(--green-mist); color: var(--green-deep); border: 1px solid var(--green-pale); }
+.badge-green { background: linear-gradient(90deg, #d1fae5, #f0fdf4); color: var(--green-deep); border: 1px solid var(--green-pale); }
 .badge-stone { background: var(--stone-mist); color: var(--stone-dark); border: 1px solid var(--stone-pale); }
 .badge-bark  { background: var(--bark-mist);  color: var(--bark-dark);  border: 1px solid var(--bark-pale); }
 .badge-lock  { background: var(--bark-mist);  color: var(--bark-dark);  border: 1px solid var(--bark-pale); }
@@ -324,15 +324,15 @@ h1,h2,h3,h4,h5,h6 {
   border: 1px solid var(--green-pale);
   transition: background .18s, color .18s;
 }
-.tag-pill:hover { background: var(--green-pale); color: var(--green-deep); }
+.tag-pill:hover { background: var(--green-soft); color: #fff; }
 
 /* ── Avatar ─────────────────────────────────────────────────── */
 .avatar {
   width: 32px;
   height: 32px;
   border-radius: 50%;
-  background: var(--green-pale);
-  color: var(--green-deep);
+  background: var(--green-soft);
+  color: #064e3b;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -362,7 +362,7 @@ h1,h2,h3,h4,h5,h6 {
 .btn:focus-visible { outline: 3px solid var(--green-pale); outline-offset: 2px; }
 
 .btn-primary {
-  background: var(--green-deep);
+  background: linear-gradient(135deg, #064e3b 0%, #065f46 100%);
   color: #fff;
   border-color: var(--green-deep);
 }
@@ -407,7 +407,7 @@ h1,h2,h3,h4,h5,h6 {
 .form-control:focus {
   outline: none;
   border-color: var(--green-soft);
-  box-shadow: 0 0 0 3px rgba(90,124,101,.12);
+  box-shadow: 0 0 0 3px rgba(52,211,153,.18);
 }
 .form-control::placeholder { color: var(--text-muted); }
 
@@ -457,7 +457,7 @@ textarea.form-control { resize: vertical; min-height: 100px; }
   overflow: hidden;
 }
 .auth-card-head {
-  background: linear-gradient(135deg, var(--green-deep), var(--green-mid));
+  background: linear-gradient(135deg, #064e3b, #047857);
   padding: 30px 32px 24px;
   text-align: center;
 }
@@ -504,7 +504,7 @@ textarea.form-control { resize: vertical; min-height: 100px; }
   font-family: var(--font-display);
   font-size: .9rem;
   font-weight: 600;
-  color: var(--green-deep);
+  color: #065f46;
   border-bottom: 1px solid var(--green-pale);
   letter-spacing: .2px;
 }
@@ -655,7 +655,7 @@ textarea.form-control { resize: vertical; min-height: 100px; }
 .blog-hero {
   position: relative;
   min-height: 180px;
-  background: linear-gradient(135deg, var(--green-deep) 0%, var(--bark-mid) 100%);
+  background: linear-gradient(135deg, #065f46 0%, #047857 100%);
   border-radius: var(--radius-lg);
   overflow: hidden;
   margin-bottom: 28px;

@@ -5,8 +5,8 @@
 <div class="container">
   <div class="auth-card" style="max-width:500px;">
     <div class="auth-card-head">
-      <h2>Создать аккаунт</h2>
-      <p>Присоединяйтесь к BlogForest</p>
+      <h2>Новый пользователь</h2>
+      <p>Создание аккаунта администратором</p>
     </div>
     <div class="auth-card-body">
       <form method="post" novalidate>
@@ -23,11 +23,11 @@
           {% endif %}
         </div>
         {% endfor %}
-        <button type="submit" class="btn btn-primary w-full btn-lg">Зарегистрироваться</button>
+        <button type="submit" class="btn btn-primary w-full btn-lg">Создать пользователя</button>
       </form>
       <hr class="divider">
       <p class="text-sm" style="text-align:center; color: var(--text-muted);">
-        Уже есть аккаунт? <a href="{% url 'login' %}">Войти</a>
+        <a href="{% url 'home' %}">← На главную</a>
       </p>
     </div>
   </div>

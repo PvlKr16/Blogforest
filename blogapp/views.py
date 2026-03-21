@@ -17,16 +17,17 @@ from .forms import (
 
 # ─── Auth ───────────────────────────────────────────────────────────────────
 
+@login_required
 def register_view(request):
-    if request.user.is_authenticated:
+    if not request.user.is_staff:
+        messages.error(request, 'Регистрация новых пользователей доступна только администратору.')
         return redirect('home')
     if request.method == 'POST':
         form = RegistrationForm(request.POST)
         if form.is_valid():
-            user = form.save()
-            login(request, user)
-            messages.success(request, f'Добро пожаловать, {user.username}!')
-            return redirect('home')
+            form.save()
+            messages.success(request, f'Пользователь «{form.cleaned_data["username"]}» успешно создан.')
+            return redirect('register')
     else:
         form = RegistrationForm()
     return render(request, 'blogapp/auth/register.html', {'form': form})

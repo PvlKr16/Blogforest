@@ -29,11 +29,13 @@
         <a href="{% url 'blog_list' %}" class="nav-link">Блоги</a>
         {% if user.is_authenticated %}
           <a href="{% url 'blog_create' %}" class="nav-link">+ Создать блог</a>
+          {% if user.is_staff %}
+          <a href="{% url 'register' %}" class="nav-link">+ Пользователь</a>
+          {% endif %}
           <a href="{% url 'profile' user.username %}" class="nav-link">{{ user.username }}</a>
           <a href="{% url 'logout' %}" class="nav-link">Выйти</a>
         {% else %}
           <a href="{% url 'login' %}" class="nav-link">Войти</a>
-          <a href="{% url 'register' %}" class="nav-link nav-btn">Регистрация</a>
         {% endif %}
       </nav>
 
