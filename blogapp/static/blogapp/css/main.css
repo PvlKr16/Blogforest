@@ -750,3 +750,19 @@ textarea.form-control { resize: vertical; min-height: 100px; }
   .container { padding: 0 14px; }
   .card-body { padding: 14px 16px; }
 }
+
+/* ── Search panel checkboxes ─────────────────────────────────── */
+.search-panel-scope input[type="checkbox"] {
+  accent-color: var(--green-deep);
+  width: 14px;
+  height: 14px;
+}
+.search-panel-scope label {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: .82rem;
+  color: var(--text-secondary);
+  cursor: pointer;
+  white-space: nowrap;
+}

@@ -11,7 +11,10 @@ from django.views.decorators.http import require_POST
 from .models import Blog, Post, Comment, Tag, PostFile
 from .forms import (
     RegistrationForm, LoginForm, BlogForm, PostForm,
-    CommentForm, SearchForm, AddMemberForm
+    CommentForm, SearchForm, AddMemberForm,
+    DEFAULT_SEARCH_SCOPES,
+    SEARCH_IN_AUTHOR, SEARCH_IN_TITLE,
+    SEARCH_IN_DESCRIPTION, SEARCH_IN_CONTENT, SEARCH_IN_COMMENTS,
 )
 
 
@@ -64,8 +67,10 @@ def logout_view(request):
 # ─── Home / Search ───────────────────────────────────────────────────────────
 
 def home(request):
-    search_form = SearchForm(request.GET or None)
+    # Bind the form only when the user submitted a search (q param present)
+    search_form = SearchForm(request.GET if 'q' in request.GET else None)
     query = ''
+    active_scopes = []
 
     public_blogs = Blog.objects.filter(is_public=True)
     if request.user.is_authenticated:
@@ -83,12 +88,31 @@ def home(request):
     ).select_related('author', 'blog').prefetch_related('tags')
 
     if search_form.is_valid():
-        query = search_form.cleaned_data['q']
-        posts_qs = posts_qs.filter(
-            Q(title__icontains=query) |
-            Q(content__icontains=query) |
-            Q(tags__name__icontains=query)
-        ).distinct()
+        query = search_form.cleaned_data.get('q', '').strip()
+        active_scopes = search_form.cleaned_data.get('scope') or DEFAULT_SEARCH_SCOPES
+        date_from = search_form.cleaned_data.get('date_from')
+        date_to = search_form.cleaned_data.get('date_to')
+
+        if query:
+            filters = Q()
+            if SEARCH_IN_TITLE in active_scopes:
+                filters |= Q(title__icontains=query)
+            if SEARCH_IN_CONTENT in active_scopes:
+                filters |= Q(content__icontains=query)
+            if SEARCH_IN_DESCRIPTION in active_scopes:
+                filters |= Q(blog__description__icontains=query) | Q(blog__body__icontains=query)
+            if SEARCH_IN_AUTHOR in active_scopes:
+                filters |= Q(author__username__icontains=query)
+            if SEARCH_IN_COMMENTS in active_scopes:
+                filters |= Q(comments__content__icontains=query)
+            posts_qs = posts_qs.filter(filters).distinct()
+
+        # Date range filter applies regardless of query text
+        if date_from:
+            posts_qs = posts_qs.filter(created_at__date__gte=date_from)
+        if date_to:
+            posts_qs = posts_qs.filter(created_at__date__lte=date_to)
+
 
     paginator = Paginator(posts_qs, 10)
     page = request.GET.get('page')
@@ -106,6 +130,7 @@ def home(request):
         'popular_tags': popular_tags,
         'search_form': search_form,
         'query': query,
+        'active_scopes': active_scopes,
     })
 
 

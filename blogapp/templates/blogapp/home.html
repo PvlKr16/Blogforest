@@ -6,14 +6,48 @@
 <div class="page-hero">
   <div class="container">
     {% if query %}
-      <h1>Поиск: «{{ query }}»</h1>
-      <p>Найдено постов: {{ posts.paginator.count }}</p>
+      <h1>Search: «{{ query }}»</h1>
+      <p>Posts found: {{ posts.paginator.count }}</p>
     {% else %}
-      <h1>Добро пожаловать в BlogForest</h1>
-      <p>Читайте, пишите и делитесь своими историями</p>
+      <h1>Welcome to BlogForest</h1>
+      <p>Read, write and share your stories</p>
     {% endif %}
   </div>
 </div>
+
+<!-- Search panel -->
+{% if search_form %}
+<div style="background:var(--green-mist); border-bottom:1px solid var(--green-pale);">
+  <div class="container" style="padding-top:16px; padding-bottom:16px;">
+    <form method="get" action="{% url 'home' %}">
+      <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:flex-end;">
+        <div style="flex:1; min-width:200px;">
+          {{ search_form.q }}
+        </div>
+        <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+          <span style="font-size:.82rem; font-weight:600; color:var(--text-secondary); white-space:nowrap;">Search in:</span>
+          {% for choice in search_form.scope %}
+          <label style="display:flex; align-items:center; gap:4px; font-size:.82rem; color:var(--text-secondary); cursor:pointer; white-space:nowrap;">
+            {{ choice.tag }}
+            {{ choice.choice_label }}
+          </label>
+          {% endfor %}
+        </div>
+        <div style="display:flex; gap:6px; align-items:center; flex-wrap:wrap;">
+          <span style="font-size:.82rem; font-weight:600; color:var(--text-secondary); white-space:nowrap;">Date:</span>
+          {{ search_form.date_from }}
+          <span style="font-size:.82rem; color:var(--text-muted);">—</span>
+          {{ search_form.date_to }}
+        </div>
+        <button type="submit" class="btn btn-primary btn-sm">Search</button>
+        {% if query %}
+        <a href="{% url 'home' %}" class="btn btn-ghost btn-sm">✕ Clear</a>
+        {% endif %}
+      </div>
+    </form>
+  </div>
+</div>
+{% endif %}
 
 <div class="container">
   <div class="content-grid">

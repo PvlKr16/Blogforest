@@ -26,7 +26,14 @@
   </div>
 
   {% if blog.description %}
-  <p class="text-muted" style="margin-bottom:24px;">{{ blog.description }}</p>
+  <p class="text-muted" style="margin-bottom:{% if blog.body %}12px{% else %}24px{% endif %};">
+    {{ blog.description }}
+  </p>
+  {% endif %}
+  {% if blog.body %}
+  <div class="card" style="padding:24px 28px; margin-bottom:28px; font-size:1rem; line-height:1.8;">
+    {{ blog.body|linebreaks }}
+  </div>
   {% endif %}
 
   <div class="content-grid">

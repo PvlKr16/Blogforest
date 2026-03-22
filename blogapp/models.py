@@ -6,12 +6,12 @@ import os
 
 
 class Tag(models.Model):
-    name = models.CharField('Название', max_length=50, unique=True)
+    name = models.CharField(max_length=50, unique=True)
     slug = models.SlugField(max_length=50, unique=True)
 
     class Meta:
-        verbose_name = 'Тег'
-        verbose_name_plural = 'Теги'
+        verbose_name = 'Tag'
+        verbose_name_plural = 'Tags'
         ordering = ['name']
 
     def __str__(self):
@@ -22,28 +22,26 @@ class Tag(models.Model):
 
 
 class Blog(models.Model):
-    title = models.CharField('Название', max_length=200)
-    description = models.TextField('Описание', blank=True)
+    title = models.CharField(max_length=200)
+    description = models.TextField(blank=True)
+    # Long-form content field with no size limit
+    body = models.TextField(blank=True)
     owner = models.ForeignKey(
         User, on_delete=models.CASCADE,
         related_name='owned_blogs',
-        verbose_name='Владелец'
     )
     members = models.ManyToManyField(
         User, blank=True,
         related_name='member_blogs',
-        verbose_name='Участники'
     )
-    is_public = models.BooleanField('Открытый блог', default=True)
-    created_at = models.DateTimeField('Создан', auto_now_add=True)
-    updated_at = models.DateTimeField('Обновлён', auto_now=True)
-    cover = models.ImageField(
-        'Обложка', upload_to='blog_covers/', blank=True, null=True
-    )
+    is_public = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    cover = models.ImageField(upload_to='blog_covers/', blank=True, null=True)
 
     class Meta:
-        verbose_name = 'Блог'
-        verbose_name_plural = 'Блоги'
+        verbose_name = 'Blog'
+        verbose_name_plural = 'Blogs'
         ordering = ['-created_at']
 
     def __str__(self):
@@ -82,26 +80,22 @@ class Post(models.Model):
     blog = models.ForeignKey(
         Blog, on_delete=models.CASCADE,
         related_name='posts',
-        verbose_name='Блог'
     )
     author = models.ForeignKey(
         User, on_delete=models.CASCADE,
         related_name='posts',
-        verbose_name='Автор'
     )
-    title = models.CharField('Заголовок', max_length=300)
-    content = models.TextField('Содержание')
-    image = models.ImageField(
-        'Изображение', upload_to=post_image_path, blank=True, null=True
-    )
-    tags = models.ManyToManyField(Tag, blank=True, verbose_name='Теги')
-    created_at = models.DateTimeField('Создан', auto_now_add=True)
-    updated_at = models.DateTimeField('Обновлён', auto_now=True)
-    is_published = models.BooleanField('Опубликован', default=True)
+    title = models.CharField(max_length=300)
+    content = models.TextField()
+    image = models.ImageField(upload_to=post_image_path, blank=True, null=True)
+    tags = models.ManyToManyField(Tag, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    is_published = models.BooleanField(default=True)
 
     class Meta:
-        verbose_name = 'Пост'
-        verbose_name_plural = 'Посты'
+        verbose_name = 'Post'
+        verbose_name_plural = 'Posts'
         ordering = ['-created_at']
 
     def __str__(self):
@@ -115,48 +109,45 @@ class PostFile(models.Model):
     post = models.ForeignKey(
         Post, on_delete=models.CASCADE,
         related_name='files',
-        verbose_name='Пост'
     )
-    file = models.FileField('Файл', upload_to=post_file_path)
-    original_name = models.CharField('Имя файла', max_length=255)
-    size = models.PositiveIntegerField('Размер (байт)', default=0)
-    uploaded_at = models.DateTimeField('Загружен', auto_now_add=True)
+    file = models.FileField(upload_to=post_file_path)
+    original_name = models.CharField(max_length=255)
+    size = models.PositiveIntegerField(default=0)
+    uploaded_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
-        verbose_name = 'Файл поста'
-        verbose_name_plural = 'Файлы постов'
+        verbose_name = 'Post file'
+        verbose_name_plural = 'Post files'
 
     def __str__(self):
         return self.original_name
 
     def size_display(self):
         size = self.size
-        for unit in ['Б', 'КБ', 'МБ', 'ГБ']:
+        for unit in ['B', 'KB', 'MB', 'GB']:
             if size < 1024:
                 return f'{size:.1f} {unit}'
             size /= 1024
-        return f'{size:.1f} ТБ'
+        return f'{size:.1f} TB'
 
 
 class Comment(models.Model):
     post = models.ForeignKey(
         Post, on_delete=models.CASCADE,
         related_name='comments',
-        verbose_name='Пост'
     )
     author = models.ForeignKey(
         User, on_delete=models.CASCADE,
         related_name='comments',
-        verbose_name='Автор'
     )
-    content = models.TextField('Комментарий')
-    created_at = models.DateTimeField('Создан', auto_now_add=True)
-    updated_at = models.DateTimeField('Обновлён', auto_now=True)
+    content = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
-        verbose_name = 'Комментарий'
-        verbose_name_plural = 'Комментарии'
+        verbose_name = 'Comment'
+        verbose_name_plural = 'Comments'
         ordering = ['created_at']
 
     def __str__(self):
-        return f'Комментарий {self.author.username} к "{self.post.title}"'
+        return f'Comment by {self.author.username} on "{self.post.title}"'

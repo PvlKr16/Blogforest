@@ -62,16 +62,18 @@ class BlogForm(forms.ModelForm):
 
     class Meta:
         model = Blog
-        fields = ('title', 'description', 'is_public', 'cover', 'members')
+        fields = ('title', 'description', 'body', 'is_public', 'cover', 'members')
         labels = {
             'title': 'Title',
             'description': 'Description',
+            'body': 'Content',
             'is_public': 'Public blog (visible to everyone)',
             'cover': 'Cover image',
         }
         widgets = {
             'title': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Blog title'}),
-            'description': forms.Textarea(attrs={'class': 'form-control', 'rows': 4, 'placeholder': 'Blog description'}),
+            'description': forms.Textarea(attrs={'class': 'form-control', 'rows': 3, 'placeholder': 'Short description'}),
+            'body': forms.Textarea(attrs={'class': 'form-control', 'rows': 10, 'placeholder': 'Full blog content...'}),
             'cover': forms.FileInput(attrs={'class': 'form-control', 'accept': 'image/*'}),
             'is_public': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
         }
@@ -180,14 +182,50 @@ class CommentForm(forms.ModelForm):
         }
 
 
+# Search scope choices — used as checkbox values
+SEARCH_IN_AUTHOR      = 'author'
+SEARCH_IN_TITLE       = 'title'
+SEARCH_IN_DESCRIPTION = 'description'
+SEARCH_IN_CONTENT     = 'content'
+SEARCH_IN_COMMENTS    = 'comments'
+
+SEARCH_SCOPE_CHOICES = [
+    (SEARCH_IN_AUTHOR,      'Author'),
+    (SEARCH_IN_TITLE,       'Title'),
+    (SEARCH_IN_DESCRIPTION, 'Description'),
+    (SEARCH_IN_CONTENT,     'Content'),
+    (SEARCH_IN_COMMENTS,    'Comments'),
+]
+
+# Fields searched when no scope checkboxes are selected
+DEFAULT_SEARCH_SCOPES = [SEARCH_IN_TITLE, SEARCH_IN_DESCRIPTION, SEARCH_IN_CONTENT]
+
+
 class SearchForm(forms.Form):
     q = forms.CharField(
         label='',
         max_length=200,
+        required=False,
         widget=forms.TextInput(attrs={
             'class': 'form-control',
             'placeholder': 'Search posts...',
         })
+    )
+    scope = forms.MultipleChoiceField(
+        choices=SEARCH_SCOPE_CHOICES,
+        required=False,
+        label='Search in',
+        widget=forms.CheckboxSelectMultiple,
+    )
+    date_from = forms.DateField(
+        required=False,
+        label='From',
+        widget=forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
+    )
+    date_to = forms.DateField(
+        required=False,
+        label='To',
+        widget=forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
     )
 
 
