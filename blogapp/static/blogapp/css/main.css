@@ -117,6 +117,8 @@ h1,h2,h3,h4,h5,h6 {
   flex: 1;
   max-width: 420px;
   position: relative;
+  /* Allow the absolutely-positioned dropdown to overflow the container */
+  overflow: visible;
 }
 .search-wrap { position: relative; }
 
@@ -151,7 +153,9 @@ h1,h2,h3,h4,h5,h6 {
   position: absolute;
   top: calc(100% + 10px);
   left: 0;
-  min-width: 480px;
+  /* Stretch right by anchoring to the nav's right edge via a large fixed width */
+  width: max-content;
+  min-width: 640px;
   background: #fff;
   border: 1.5px solid var(--green-pale);
   border-radius: var(--radius-md);
@@ -168,12 +172,19 @@ h1,h2,h3,h4,h5,h6 {
   pointer-events: auto;
 }
 .search-dropdown-inner {
-  padding: 16px 20px;
+  padding: 14px 20px;
+  display: flex;
+  flex-direction: row;
+  align-items: flex-end;
+  gap: 20px;
+  flex-wrap: nowrap;
+}
+.search-dropdown-section {
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 8px;
+  flex-shrink: 0;
 }
-.search-dropdown-section { display: flex; flex-direction: column; gap: 8px; }
 .search-dropdown-label {
   font-size: .72rem;
   font-weight: 700;
@@ -227,6 +238,7 @@ h1,h2,h3,h4,h5,h6 {
 .search-date-input:focus { border-color: var(--green-soft); }
 .search-date-sep { color: var(--text-muted); font-size: .9rem; }
 .search-submit-btn {
+  flex-shrink: 0;
   align-self: flex-end;
   background: var(--green-deep);
   color: #fff;
@@ -842,6 +854,48 @@ textarea.form-control { resize: vertical; min-height: 100px; }
   .blog-card-grid { grid-template-columns: 1fr; }
 
   .post-detail-title { font-size: 1.5rem; }
+
+  /* Search dropdown — use fixed positioning on mobile to escape parent clipping */
+  #search-dropdown {
+    position: fixed;
+    left: 16px;
+    right: 16px;
+    top: calc(var(--header-h) + 8px);
+    width: auto;
+    min-width: 0;
+    max-width: none;
+    /* Reset the desktop slide-in origin so animation still looks correct */
+    transform: translateY(-6px);
+  }
+  #search-dropdown.search-dropdown-open {
+    transform: translateY(0);
+  }
+  .search-dropdown-inner {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+  }
+  .search-dropdown-pills {
+    flex-direction: column;
+    gap: 6px;
+  }
+  .search-pill {
+    width: 100%;
+    padding: 7px 12px;
+    border-radius: var(--radius-sm);
+  }
+  .search-dropdown-dates {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 6px;
+  }
+  .search-date-sep { display: none; }
+  .search-date-input { width: 100%; }
+  .search-submit-btn {
+    width: 100%;
+    text-align: center;
+    padding: 9px 20px;
+  }
 }
 
 @media (max-width: 420px) {
