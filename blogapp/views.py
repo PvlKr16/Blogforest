@@ -1,4 +1,5 @@
 from django.shortcuts import render, get_object_or_404, redirect
+from django.urls import reverse
 from django.contrib.auth import login, logout, authenticate
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
@@ -158,7 +159,11 @@ def blog_detail(request, pk):
     if not blog.can_view(request.user):
         raise Http404
 
-    posts = blog.posts.filter(is_published=True).select_related('author').prefetch_related('tags')
+    # Sort order: 'asc' = oldest first (default), 'desc' = newest first
+    sort = request.GET.get('sort', 'asc')
+    order = 'created_at' if sort == 'asc' else '-created_at'
+
+    posts = blog.posts.filter(is_published=True).order_by(order).select_related('author').prefetch_related('tags')
     paginator = Paginator(posts, 10)
     page = request.GET.get('page')
     posts_page = paginator.get_page(page)
@@ -180,6 +185,7 @@ def blog_detail(request, pk):
         'is_owner': is_owner,
         'is_member': is_member,
         'add_member_form': add_member_form,
+        'sort': sort,
     })
 
 
@@ -288,35 +294,7 @@ def blog_remove_member(request, pk, user_id):
 
 # ─── Posts ───────────────────────────────────────────────────────────────────
 
-def post_detail(request, pk):
-    post = get_object_or_404(Post, pk=pk, is_published=True)
-    if not post.blog.can_view(request.user):
-        raise Http404
-
-    comments = post.comments.select_related('author')
-    files = post.files.all()
-    comment_form = CommentForm()
-
-    if request.method == 'POST':
-        if not request.user.is_authenticated:
-            return redirect('login')
-        comment_form = CommentForm(request.POST)
-        if comment_form.is_valid():
-            comment = comment_form.save(commit=False)
-            comment.post = post
-            comment.author = request.user
-            comment.save()
-            messages.success(request, 'Comment added.')
-            return redirect('post_detail', pk=post.pk)
-
-    can_edit = request.user == post.author or request.user == post.blog.owner
-    return render(request, 'blogapp/post/detail.html', {
-        'post': post,
-        'comments': comments,
-        'files': files,
-        'comment_form': comment_form,
-        'can_edit': can_edit,
-    })
+# post_detail removed — comments live on blog_detail page
 
 
 @login_required
@@ -332,13 +310,14 @@ def post_create(request, blog_pk):
             post = form.save(commit=False)
             post.blog = blog
             post.author = request.user
+            post.is_published = True  # always publish — no draft mode for comments
             post.save()
             form.save_tags(post)
 
-            # Handle multiple file attachments
+            # Handle multiple file attachments (max 5 MB each)
             for f in request.FILES.getlist('post_files'):
-                if f.size > 10 * 1024 * 1024:
-                    messages.warning(request, f'File "{f.name}" skipped: exceeds the 10 MB limit.')
+                if f.size > 5 * 1024 * 1024:
+                    messages.warning(request, f'File "{f.name}" skipped: exceeds the 5 MB limit.')
                     continue
                 PostFile.objects.create(
                     post=post,
@@ -347,8 +326,8 @@ def post_create(request, blog_pk):
                     size=f.size
                 )
 
-            messages.success(request, 'Post published!')
-            return redirect('post_detail', pk=post.pk)
+            messages.success(request, 'Comment added!')
+            return redirect('blog_detail', pk=blog.pk)
     else:
         form = PostForm()
 
@@ -360,9 +339,9 @@ def post_create(request, blog_pk):
 @login_required
 def post_edit(request, pk):
     post = get_object_or_404(Post, pk=pk)
-    if request.user != post.author and request.user != post.blog.owner:
-        messages.error(request, 'You do not have permission to edit this post.')
-        return redirect('post_detail', pk=pk)
+    if not request.user.is_staff:
+        messages.error(request, 'Only administrators can edit comments.')
+        return redirect('blog_detail', pk=post.blog.pk)
 
     if request.method == 'POST':
         form = PostForm(request.POST, request.FILES, instance=post)
@@ -371,15 +350,15 @@ def post_edit(request, pk):
             form.save_tags(post)
 
             for f in request.FILES.getlist('post_files'):
-                if f.size > 10 * 1024 * 1024:
-                    messages.warning(request, f'File "{f.name}" skipped: exceeds the 10 MB limit.')
+                if f.size > 5 * 1024 * 1024:
+                    messages.warning(request, f'File "{f.name}" skipped: exceeds the 5 MB limit.')
                     continue
                 PostFile.objects.create(
                     post=post, file=f, original_name=f.name, size=f.size
                 )
 
-            messages.success(request, 'Post updated!')
-            return redirect('post_detail', pk=post.pk)
+            messages.success(request, 'Comment updated!')
+            return redirect('blog_detail', pk=post.blog.pk)
     else:
         tags_str = ', '.join(post.tags.values_list('name', flat=True))
         form = PostForm(instance=post, initial={'tags_input': tags_str})
@@ -392,13 +371,13 @@ def post_edit(request, pk):
 @login_required
 def post_delete(request, pk):
     post = get_object_or_404(Post, pk=pk)
-    if request.user != post.author and request.user != post.blog.owner:
-        messages.error(request, 'You do not have permission to delete this post.')
-        return redirect('post_detail', pk=pk)
+    if not request.user.is_staff:
+        messages.error(request, 'Only administrators can delete comments.')
+        return redirect('blog_detail', pk=post.blog.pk)
     blog_pk = post.blog.pk
     if request.method == 'POST':
         post.delete()
-        messages.success(request, 'Post deleted.')
+        messages.success(request, 'Comment deleted.')
         return redirect('blog_detail', pk=blog_pk)
     return render(request, 'blogapp/post/delete_confirm.html', {'post': post})
 
@@ -408,13 +387,13 @@ def post_delete(request, pk):
 def delete_file(request, file_pk):
     pf = get_object_or_404(PostFile, pk=file_pk)
     post = pf.post
-    if request.user != post.author and request.user != post.blog.owner:
-        messages.error(request, 'You do not have permission to delete this file.')
-        return redirect('post_detail', pk=post.pk)
+    if not request.user.is_staff:
+        messages.error(request, 'Only administrators can delete files.')
+        return redirect('blog_detail', pk=post.blog.pk)
     pf.file.delete(save=False)
     pf.delete()
     messages.success(request, 'File deleted.')
-    return redirect('post_edit', pk=post.pk)
+    return redirect(reverse('blog_detail', kwargs={'pk': post.blog.pk}))  # stays on edit page
 
 
 # ─── Blog files ──────────────────────────────────────────────────────────────

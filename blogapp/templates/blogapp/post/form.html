@@ -5,7 +5,7 @@
 <div class="page-hero">
   <div class="container">
     <h1>{{ action }}</h1>
-    <p>Блог: <a href="{{ blog.get_absolute_url }}" style="color:rgba(255,255,255,.85);">{{ blog.title }}</a></p>
+    <p>Topic: <a href="{{ blog.get_absolute_url }}" style="color:rgba(255,255,255,.85);">{{ blog.title }}</a></p>
   </div>
 </div>
 
@@ -31,24 +31,12 @@
           <div class="form-group">
             <label class="form-label" for="{{ form.tags_input.id_for_label }}">{{ form.tags_input.label }}</label>
             {{ form.tags_input }}
-            <div class="form-text">Пример: путешествия, фото, жизнь</div>
-          </div>
-
-          <div class="form-group">
-            <label class="form-label" for="{{ form.image.id_for_label }}">{{ form.image.label }}</label>
-            {% if post.image %}
-            <div style="margin-bottom:10px;">
-              <img src="{{ post.image.url }}" alt="" style="height:100px; border-radius:8px; object-fit:cover;">
-            </div>
-            {% endif %}
-            {{ form.image }}
-            <div class="form-text">Максимум 5 МБ.</div>
-            {% if form.image.errors %}<ul class="errorlist">{% for e in form.image.errors %}<li>{{ e }}</li>{% endfor %}</ul>{% endif %}
+            <div class="form-text">Example: travel, photography, life</div>
           </div>
 
           <!-- File attachments -->
           <div class="form-group">
-            <label class="form-label">Прикреплённые файлы</label>
+            <label class="form-label">Attachments</label>
             {% if post %}
             {% with files=post.files.all %}
             {% if files %}
@@ -62,7 +50,7 @@
                   {% csrf_token %}
                   <button type="submit" class="btn btn-ghost btn-sm"
                           style="padding:2px 7px; color:#c0392b; border-color:#f5c2c0;"
-                          onclick="return confirm('Удалить файл?')">✕</button>
+                          onclick="return confirm('Delete file?')">✕</button>
                 </form>
               </div>
               {% endfor %}
@@ -70,27 +58,13 @@
             {% endif %}
             {% endwith %}
             {% endif %}
-            <input type="file" name="post_files" class="form-control" multiple
-                   accept=".pdf,.doc,.docx,.xls,.xlsx,.txt,.zip,.rar,.png,.jpg,.jpeg,.gif,.mp3,.mp4">
-            <div class="form-text">Можно загрузить несколько файлов. Максимум 10 МБ на файл.</div>
-          </div>
-
-          <div class="form-group">
-            <div class="form-check">
-              {{ form.is_published }}
-              <label for="{{ form.is_published.id_for_label }}" class="form-label mb-0" style="cursor:pointer;">
-                {{ form.is_published.label }}
-              </label>
-            </div>
+            <input type="file" name="post_files" class="form-control" multiple>
+            <div class="form-text">Any file type. Max 5 MB per file.</div>
           </div>
 
           <div style="display:flex; gap:12px; flex-wrap:wrap; margin-top:8px;">
             <button type="submit" class="btn btn-primary btn-lg">{{ action }}</button>
-            {% if post %}
-            <a href="{{ post.get_absolute_url }}" class="btn btn-ghost btn-lg">Отмена</a>
-            {% else %}
-            <a href="{{ blog.get_absolute_url }}" class="btn btn-ghost btn-lg">Отмена</a>
-            {% endif %}
+            <a href="{{ blog.get_absolute_url }}" class="btn btn-ghost btn-lg">Cancel</a>
           </div>
         </form>
       </div>

@@ -17,7 +17,7 @@
       <h1>{{ blog.title }}</h1>
       <div class="blog-hero-meta">
         Author: <a href="{% url 'profile' blog.owner.username %}" style="color:rgba(255,255,255,.9);">{{ blog.owner.username }}</a>
-        &nbsp;·&nbsp; Created: {{ blog.created_at|date:"d M Y" }}
+        &nbsp;·&nbsp; Created: {{ blog.created_at|date:"Y-m-d H:i" }}
         &nbsp;·&nbsp; Posts: {{ blog.posts.count }}
       </div>
     </div>
@@ -78,23 +78,35 @@
     <div>
       <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; flex-wrap:wrap; gap:10px;">
         <h2 style="font-size:1.2rem;">Discussion</h2>
-        {% if can_post %}
-        <a href="{% url 'post_create' blog.pk %}" class="btn btn-primary btn-sm">Add comment</a>
-        {% endif %}
+        <div class="flex items-center gap-2">
+          <!-- Sort toggle -->
+          <div style="display:flex; border:1.5px solid var(--border); border-radius:var(--radius-sm); overflow:hidden;">
+            <a href="?sort=asc{% if request.GET.page %}&page={{ request.GET.page }}{% endif %}"
+               class="sort-btn {% if sort == 'asc' %}sort-btn-active{% endif %}"
+               title="Oldest first">↑ Oldest</a>
+            <a href="?sort=desc{% if request.GET.page %}&page={{ request.GET.page }}{% endif %}"
+               class="sort-btn {% if sort == 'desc' %}sort-btn-active{% endif %}"
+               title="Newest first">↓ Newest</a>
+          </div>
+          {% if can_post %}
+          <a href="{% url 'post_create' blog.pk %}" class="btn btn-primary btn-sm">Add comment</a>
+          {% endif %}
+        </div>
       </div>
 
       {% for post in posts %}
-      <article class="card post-card">
-        {% if post.image %}
-        <img src="{{ post.image.url }}" alt="{{ post.title }}" class="post-card-cover">
-        {% endif %}
+      <article class="card post-card" id="comment-{{ post.pk }}">
         <div class="card-body">
-          <div class="post-card-meta">
-            <span class="text-muted text-sm">{{ post.created_at|date:"d M Y" }}</span>
+          <div style="display:flex; justify-content:space-between; align-items:baseline; gap:12px; margin-bottom:8px;">
+            <h3 class="post-card-title mb-0">{{ post.title }}</h3>
+            <div class="flex items-center gap-2" style="flex-shrink:0;">
+              <span class="text-muted text-sm" style="white-space:nowrap;">{{ post.created_at|date:"Y-m-d H:i" }}</span>
+              {% if user.is_staff %}
+              <a href="{% url 'post_edit' post.pk %}" class="btn btn-ghost btn-sm" style="font-size:.75rem; padding:2px 8px;">✏️</a>
+              <a href="{% url 'post_delete' post.pk %}" class="btn btn-ghost btn-sm" style="font-size:.75rem; padding:2px 8px; color:#c0392b; border-color:#f5c2c0;">🗑</a>
+              {% endif %}
+            </div>
           </div>
-          <h3 class="post-card-title">
-            <a href="{{ post.get_absolute_url }}">{{ post.title }}</a>
-          </h3>
           <p class="post-card-excerpt">{{ post.content|truncatewords:35 }}</p>
           {% if post.tags.all %}
           <div class="flex flex-wrap gap-2 mt-3">
@@ -103,6 +115,38 @@
             {% endfor %}
           </div>
           {% endif %}
+          {% with post_files=post.files.all %}
+          {% if post_files %}
+          <div style="margin-top:14px;">
+            <div class="attachment-grid">
+              {% for pf in post_files %}
+              {% with ptype=pf.original_name|file_preview_type %}
+              <a href="{{ pf.file.url }}" class="attachment-card" download="{{ pf.original_name }}" title="{{ pf.original_name }}">
+                <div class="attachment-preview">
+                  {% if ptype == 'image' %}
+                    <img src="{{ pf.file.url }}" alt="{{ pf.original_name }}">
+                  {% elif ptype == 'video' %}
+                    <video src="{{ pf.file.url }}" muted preload="metadata"></video>
+                    <div class="attachment-play">▶</div>
+                  {% elif ptype == 'audio' %}
+                    <div class="attachment-icon-wrap">🎵</div>
+                  {% elif ptype == 'pdf' %}
+                    <div class="attachment-icon-wrap">📕</div>
+                  {% else %}
+                    <div class="attachment-icon-wrap">{{ pf.original_name|file_icon }}</div>
+                  {% endif %}
+                </div>
+                <div class="attachment-info">
+                  <span class="attachment-name">{{ pf.original_name }}</span>
+                  <span class="attachment-size">{{ pf.size_display }}</span>
+                </div>
+              </a>
+              {% endwith %}
+              {% endfor %}
+            </div>
+          </div>
+          {% endif %}
+          {% endwith %}
         </div>
         <div class="card-footer">
           <div class="flex items-center gap-2">
@@ -110,7 +154,6 @@
               {{ post.author.username|first|upper }}
             </div>
             <a href="{% url 'profile' post.author.username %}" class="text-sm">{{ post.author.username }}</a>
-            <span class="text-muted text-sm" style="margin-left:auto;">💬 {{ post.comments.count }}</span>
           </div>
         </div>
       </article>

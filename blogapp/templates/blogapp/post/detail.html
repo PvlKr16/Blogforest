@@ -1,4 +1,5 @@
 {% extends 'blogapp/base.html' %}
+{% load file_tags %}
 {% block title %}{{ post.title }} — BlogForest{% endblock %}
 
 {% block content %}
@@ -7,7 +8,7 @@
 
     <!-- Breadcrumb -->
     <div class="text-sm text-muted" style="margin-bottom:20px;">
-      <a href="{% url 'home' %}">Главная</a> /
+      <a href="{% url 'home' %}">Home</a> /
       <a href="{{ post.blog.get_absolute_url }}">{{ post.blog.title }}</a> /
       <span>{{ post.title|truncatechars:40 }}</span>
     </div>
@@ -26,24 +27,20 @@
           <div class="avatar">{{ post.author.username|first|upper }}</div>
           <a href="{% url 'profile' post.author.username %}">{{ post.author.username }}</a>
         </div>
-        <span>{{ post.created_at|date:"d M Y, H:i" }}</span>
+        <span>{{ post.created_at|date:"Y-m-d H:i" }}</span>
         {% if post.updated_at != post.created_at %}
-        <span>(обновлено {{ post.updated_at|date:"d M Y" }})</span>
+        <span>(updated {{ post.updated_at|date:"Y-m-d" }})</span>
         {% endif %}
         <span>💬 {{ comments.count }}</span>
-        {% if can_edit %}
+        {% if user.is_staff %}
         <div style="margin-left:auto; display:flex; gap:8px;">
-          <a href="{% url 'post_edit' post.pk %}" class="btn btn-outline btn-sm">✏️ Изменить</a>
-          <a href="{% url 'post_delete' post.pk %}" class="btn btn-ghost btn-sm" style="color:#c0392b; border-color:#f5c2c0;">🗑</a>
+          <a href="{% url 'post_edit' post.pk %}" class="btn btn-outline btn-sm">✏️ Edit</a>
+          <a href="{% url 'post_delete' post.pk %}" class="btn btn-ghost btn-sm"
+             style="color:#c0392b; border-color:#f5c2c0;">🗑</a>
         </div>
         {% endif %}
       </div>
     </div>
-
-    <!-- Cover image -->
-    {% if post.image %}
-    <img src="{{ post.image.url }}" alt="{{ post.title }}" class="post-detail-cover">
-    {% endif %}
 
     <!-- Content -->
     <div class="post-body card" style="padding:28px 32px; box-shadow:var(--shadow-sm);">
@@ -59,19 +56,35 @@
     </div>
     {% endif %}
 
-    <!-- Files -->
+    <!-- Attached files — thumbnail grid -->
     {% if files %}
     <div style="margin-top:28px;">
-      <h3 style="font-size:1.05rem; margin-bottom:12px;">📎 Прикреплённые файлы</h3>
-      <div class="files-list">
+      <h3 style="font-size:1.05rem; margin-bottom:16px;">📎 Attachments</h3>
+      <div class="attachment-grid">
         {% for pf in files %}
-        <div class="file-item">
-          <span class="file-item-icon">📄</span>
-          <a href="{{ pf.file.url }}" class="file-item-name" download="{{ pf.original_name }}">
-            {{ pf.original_name }}
-          </a>
-          <span class="file-item-size">{{ pf.size_display }}</span>
-        </div>
+        {% with ptype=pf.original_name|file_preview_type %}
+        <a href="{{ pf.file.url }}" class="attachment-card"
+           download="{{ pf.original_name }}" title="{{ pf.original_name }}">
+          <div class="attachment-preview">
+            {% if ptype == 'image' %}
+              <img src="{{ pf.file.url }}" alt="{{ pf.original_name }}">
+            {% elif ptype == 'video' %}
+              <video src="{{ pf.file.url }}" muted preload="metadata"></video>
+              <div class="attachment-play">▶</div>
+            {% elif ptype == 'audio' %}
+              <div class="attachment-icon-wrap">🎵</div>
+            {% elif ptype == 'pdf' %}
+              <div class="attachment-icon-wrap">📕</div>
+            {% else %}
+              <div class="attachment-icon-wrap">{{ pf.original_name|file_icon }}</div>
+            {% endif %}
+          </div>
+          <div class="attachment-info">
+            <span class="attachment-name">{{ pf.original_name }}</span>
+            <span class="attachment-size">{{ pf.size_display }}</span>
+          </div>
+        </a>
+        {% endwith %}
         {% endfor %}
       </div>
     </div>
@@ -80,7 +93,7 @@
     <!-- Comments -->
     <div class="comments-section">
       <h3 style="font-size:1.15rem; margin-bottom:20px;">
-        Комментарии ({{ comments.count }})
+        Comments ({{ comments.count }})
       </h3>
 
       {% for comment in comments %}
@@ -90,29 +103,31 @@
           <span class="comment-author">
             <a href="{% url 'profile' comment.author.username %}">{{ comment.author.username }}</a>
           </span>
-          <span class="comment-date">{{ comment.created_at|date:"d M Y, H:i" }}</span>
+          <span class="comment-date">{{ comment.created_at|date:"Y-m-d H:i" }}</span>
           <p class="comment-text">{{ comment.content|linebreaks }}</p>
         </div>
       </div>
       {% empty %}
-      <p class="text-muted text-sm">Комментариев пока нет. Будьте первым!</p>
+      <p class="text-muted text-sm">No comments yet. Be the first!</p>
       {% endfor %}
 
       <!-- Add comment -->
       <div style="margin-top:24px;">
         {% if user.is_authenticated %}
-        <h4 style="font-size:1rem; margin-bottom:12px;">Оставить комментарий</h4>
+        <h4 style="font-size:1rem; margin-bottom:12px;">Leave a comment</h4>
         <form method="post">
           {% csrf_token %}
           {{ comment_form.content }}
           {% if comment_form.content.errors %}
-          <ul class="errorlist">{% for e in comment_form.content.errors %}<li>{{ e }}</li>{% endfor %}</ul>
+          <ul class="errorlist">
+            {% for e in comment_form.content.errors %}<li>{{ e }}</li>{% endfor %}
+          </ul>
           {% endif %}
-          <button type="submit" class="btn btn-primary btn-sm mt-3">Отправить</button>
+          <button type="submit" class="btn btn-primary btn-sm mt-3">Submit</button>
         </form>
         {% else %}
         <div class="alert alert-info">
-          <a href="{% url 'login' %}">Войдите</a>, чтобы оставить комментарий.
+          <a href="{% url 'login' %}">Log in</a> to leave a comment.
         </div>
         {% endif %}
       </div>

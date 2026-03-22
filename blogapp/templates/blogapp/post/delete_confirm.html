@@ -14,7 +14,7 @@
             {% csrf_token %}
             <button type="submit" class="btn btn-danger btn-lg">Да, удалить</button>
           </form>
-          <a href="{{ post.get_absolute_url }}" class="btn btn-ghost btn-lg">Отмена</a>
+          <a href="{{ post.blog.get_absolute_url }}" class="btn btn-ghost btn-lg">Cancel</a>
         </div>
       </div>
     </div>

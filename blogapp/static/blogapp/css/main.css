@@ -998,3 +998,22 @@ textarea.form-control { resize: vertical; min-height: 100px; }
   }
   .attachment-preview { height: 100px; }
 }
+
+/* ── Sort toggle buttons ─────────────────────────────────────── */
+.sort-btn {
+  display: inline-block;
+  padding: 5px 12px;
+  font-size: .8rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+  background: #fff;
+  text-decoration: none;
+  transition: background .15s, color .15s;
+  white-space: nowrap;
+}
+.sort-btn:hover { background: var(--green-mist); color: var(--green-deep); }
+.sort-btn-active {
+  background: var(--green-deep);
+  color: #fff !important;
+}
+.sort-btn-active:hover { background: var(--green-mid); }

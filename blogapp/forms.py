@@ -98,28 +98,15 @@ class PostForm(forms.ModelForm):
 
     class Meta:
         model = Post
-        fields = ('title', 'content', 'image', 'is_published')
+        fields = ('title', 'content')
         labels = {
             'title': 'Title',
             'content': 'Content',
-            'image': 'Image',
-            'is_published': 'Publish',
         }
         widgets = {
-            'title': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Post title'}),
-            'content': forms.Textarea(attrs={'class': 'form-control', 'rows': 10, 'placeholder': 'Post content...'}),
-            'image': forms.FileInput(attrs={'class': 'form-control', 'accept': 'image/*'}),
-            'is_published': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+            'title': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Comment title'}),
+            'content': forms.Textarea(attrs={'class': 'form-control', 'rows': 10, 'placeholder': 'Write your comment...'}),
         }
-
-    def clean_image(self):
-        image = self.cleaned_data.get('image')
-        if image and hasattr(image, 'size'):
-            if image.size > settings.MAX_IMAGE_SIZE:
-                raise forms.ValidationError(
-                    f'Image size must not exceed {settings.MAX_IMAGE_SIZE // (1024 * 1024)} MB.'
-                )
-        return image
 
     def save_tags(self, post):
         """Parse the comma-separated tags input and attach Tag objects to the post."""
