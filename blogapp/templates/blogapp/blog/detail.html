@@ -186,16 +186,14 @@
               <div class="member-name">
                 <a href="{% url 'profile' member.username %}">{{ member.username }}</a>
               </div>
-              {% if user.is_authenticated %}
-                {% if user == blog.owner or user == member %}
-                <form method="post" action="{% url 'blog_remove_member' blog.pk member.pk %}" style="margin:0;">
-                  {% csrf_token %}
-                  <button type="submit" class="btn btn-ghost btn-sm"
-                          style="padding:2px 7px; font-size:.75rem; color:#c0392b; border-color:#f5c2c0;"
-                          title="Remove member"
-                          onclick="return confirm('Remove {{ member.username }} from members?')">✕</button>
-                </form>
-                {% endif %}
+              {% if user == member %}
+              <form method="post" action="{% url 'blog_remove_member' blog.pk member.pk %}" style="margin:0;">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-ghost btn-sm"
+                        style="padding:2px 7px; font-size:.75rem; color:#c0392b; border-color:#f5c2c0;"
+                        title="Leave topic"
+                        onclick="return confirm('Leave this topic?')">✕</button>
+              </form>
               {% endif %}
             </div>
             {% empty %}

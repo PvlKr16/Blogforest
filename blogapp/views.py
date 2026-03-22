@@ -277,12 +277,12 @@ def blog_leave(request, pk):
 def blog_remove_member(request, pk, user_id):
     blog = get_object_or_404(Blog, pk=pk)
     target = get_object_or_404(User, pk=user_id)
-    # Owner can remove anyone; a member can remove themselves
-    if request.user == blog.owner or request.user == target:
+    # Only the member themselves can remove themselves from a topic
+    if request.user == target:
         blog.members.remove(target)
-        messages.success(request, f'Member {target.username} removed from the blog.')
+        messages.success(request, f'You have been removed from "{blog.title}".')
     else:
-        messages.error(request, 'You do not have permission to do this.')
+        messages.error(request, 'You can only remove yourself from a topic.')
     return redirect('blog_detail', pk=blog.pk)
 
 
