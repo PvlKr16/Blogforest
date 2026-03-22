@@ -16,41 +16,83 @@
     <div class="container header-inner">
       <a href="{% url 'home' %}" class="site-logo">Blog<span>Forest</span></a>
 
-      <div class="header-search">
-        <form method="get" action="{% url 'home' %}" class="search-wrap">
+      <!-- Search with dropdown options -->
+      <div class="header-search" id="search-wrapper">
+        <form method="get" action="{% url 'home' %}" class="search-wrap" autocomplete="off">
           <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
           </svg>
-          <input type="text" name="q" placeholder="Search posts..."
-                 value="{{ request.GET.q|default:'' }}"
-                 autocomplete="off">
-          <button type="submit" aria-label="Search" style="
-            position:absolute; right:8px; top:50%; transform:translateY(-50%);
-            background:none; border:none; cursor:pointer; padding:2px;
-            color:rgba(255,255,255,.7); display:flex; align-items:center;">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
-                 stroke="currentColor" stroke-width="2.5">
-              <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
-            </svg>
-          </button>
+          <input type="text" name="q" id="search-input"
+                 placeholder="Search posts..."
+                 value="{{ request.GET.q|default:'' }}">
+          <!-- Search options dropdown -->
+          <div id="search-dropdown">
+            <div class="search-dropdown-inner">
+
+              <div class="search-dropdown-section">
+                <div class="search-dropdown-label">Search in</div>
+                <div class="search-dropdown-pills">
+                  <label class="search-pill">
+                    <input type="checkbox" name="scope" value="title"
+                      {% if 'title' in search_scopes %}checked{% endif %}>
+                    Title
+                  </label>
+                  <label class="search-pill">
+                    <input type="checkbox" name="scope" value="description"
+                      {% if 'description' in search_scopes %}checked{% endif %}>
+                    Description
+                  </label>
+                  <label class="search-pill">
+                    <input type="checkbox" name="scope" value="content"
+                      {% if 'content' in search_scopes %}checked{% endif %}>
+                    Content
+                  </label>
+                  <label class="search-pill">
+                    <input type="checkbox" name="scope" value="author"
+                      {% if 'author' in search_scopes %}checked{% endif %}>
+                    Author
+                  </label>
+                  <label class="search-pill">
+                    <input type="checkbox" name="scope" value="comments"
+                      {% if 'comments' in search_scopes %}checked{% endif %}>
+                    Comments
+                  </label>
+                </div>
+              </div>
+
+              <div class="search-dropdown-section">
+                <div class="search-dropdown-label">Date range</div>
+                <div class="search-dropdown-dates">
+                  <input type="date" name="date_from" class="search-date-input"
+                         value="{{ request.GET.date_from|default:'' }}" placeholder="From">
+                  <span class="search-date-sep">—</span>
+                  <input type="date" name="date_to" class="search-date-input"
+                         value="{{ request.GET.date_to|default:'' }}" placeholder="To">
+                </div>
+              </div>
+
+              <button type="submit" class="search-submit-btn">Search</button>
+
+            </div>
+          </div>
         </form>
       </div>
 
       <nav class="header-nav" id="main-nav">
-        <a href="{% url 'blog_list' %}" class="nav-link">Блоги</a>
+        <a href="{% url 'blog_list' %}" class="nav-link">Blogs</a>
         {% if user.is_authenticated %}
-          <a href="{% url 'blog_create' %}" class="nav-link">+ Создать блог</a>
+          <a href="{% url 'blog_create' %}" class="nav-link">+ New blog</a>
           {% if user.is_staff %}
-          <a href="{% url 'register' %}" class="nav-link">+ Пользователь</a>
+          <a href="{% url 'register' %}" class="nav-link">+ User</a>
           {% endif %}
           <a href="{% url 'profile' user.username %}" class="nav-link">{{ user.username }}</a>
-          <a href="{% url 'logout' %}" class="nav-link">Выйти</a>
+          <a href="{% url 'logout' %}" class="nav-link">Log out</a>
         {% else %}
-          <a href="{% url 'login' %}" class="nav-link">Войти</a>
+          <a href="{% url 'login' %}" class="nav-link">Log in</a>
         {% endif %}
       </nav>
 
-      <button class="burger" id="burger-btn" aria-label="Меню">
+      <button class="burger" id="burger-btn" aria-label="Menu">
         <span></span><span></span><span></span>
       </button>
     </div>
@@ -75,19 +117,13 @@
   <!-- ── Footer ── -->
   <footer class="site-footer">
     <div class="container">
-      <p>© 2024 <a href="{% url 'home' %}">BlogForest</a> &mdash; место для мыслей и историй</p>
+      <p>&copy; 2024 <a href="{% url 'home' %}">BlogForest</a> &mdash; a place for thoughts and stories</p>
     </div>
   </footer>
 
 </div>
 
-<script>
-  const burger = document.getElementById('burger-btn');
-  const nav = document.getElementById('main-nav');
-  burger?.addEventListener('click', () => {
-    nav.classList.toggle('open');
-  });
-</script>
+<script src="{% static 'blogapp/js/main.js' %}"></script>
 {% block extra_js %}{% endblock %}
 </body>
 </html>
