@@ -46,7 +46,7 @@
     <!-- Sidebar -->
     <aside class="sidebar">
       <div class="sidebar-widget">
-        <div class="sidebar-widget-head">Блоги автора</div>
+        <div class="sidebar-widget-head">Author's topics</div>
         <div class="sidebar-widget-body">
           {% for blog in user_blogs %}
           <div class="sidebar-blog-item">
@@ -58,13 +58,13 @@
                 <a href="{{ blog.get_absolute_url }}">{{ blog.title }}</a>
               </div>
               <div class="sidebar-blog-sub">
-                {% if blog.is_public %}🌿 Открытый{% else %}🔒 Закрытый{% endif %}
+                {% if blog.is_public %}🌿 Public{% else %}🔒 Private{% endif %}
                 · {{ blog.posts.count }} постов
               </div>
             </div>
           </div>
           {% empty %}
-          <p class="text-muted text-sm">Блогов нет.</p>
+          <p class="text-muted text-sm">No topics.</p>
           {% endfor %}
         </div>
       </div>

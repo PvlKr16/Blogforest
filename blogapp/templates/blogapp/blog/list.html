@@ -1,5 +1,5 @@
 {% extends 'blogapp/base.html' %}
-{% block title %}Блоги — BlogForest{% endblock %}
+{% block title %}Topics — BlogForest{% endblock %}
 
 {% block content %}
 <div class="page-hero">
@@ -11,7 +11,7 @@
 
 <div class="container content-full">
   <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:24px; flex-wrap:wrap; gap:12px;">
-    <p class="text-muted text-sm">Найдено: {{ blogs.paginator.count }}</p>
+    <p class="text-muted text-sm">Found: {{ blogs.paginator.count }}</p>
     {% if user.is_authenticated %}
     <a href="{% url 'blog_create' %}" class="btn btn-primary">+ Создать блог</a>
     {% endif %}

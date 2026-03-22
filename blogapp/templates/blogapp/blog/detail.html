@@ -1,26 +1,24 @@
 {% extends 'blogapp/base.html' %}
+{% load file_tags %}
 {% block title %}{{ blog.title }} — BlogForest{% endblock %}
 
 {% block content %}
 <div class="container content-full">
 
-  <!-- Blog hero -->
+  <!-- Topic hero -->
   <div class="blog-hero">
-    {% if blog.cover %}
-    <img src="{{ blog.cover.url }}" alt="{{ blog.title }}" class="blog-hero-cover">
-    {% endif %}
     <div class="blog-hero-content">
       <div style="margin-bottom:8px;">
         <span class="badge {% if blog.is_public %}badge-green{% else %}badge-lock{% endif %}"
               style="background:rgba(255,255,255,.2); border-color:rgba(255,255,255,.4); color:#fff;">
-          {% if blog.is_public %}🌿 Открытый{% else %}🔒 Закрытый{% endif %}
+          {% if blog.is_public %}🌿 Public{% else %}🔒 Private{% endif %}
         </span>
       </div>
       <h1>{{ blog.title }}</h1>
       <div class="blog-hero-meta">
-        Автор: <a href="{% url 'profile' blog.owner.username %}" style="color:rgba(255,255,255,.9);">{{ blog.owner.username }}</a>
-        &nbsp;·&nbsp; Создан: {{ blog.created_at|date:"d M Y" }}
-        &nbsp;·&nbsp; Постов: {{ blog.posts.count }}
+        Author: <a href="{% url 'profile' blog.owner.username %}" style="color:rgba(255,255,255,.9);">{{ blog.owner.username }}</a>
+        &nbsp;·&nbsp; Created: {{ blog.created_at|date:"d M Y" }}
+        &nbsp;·&nbsp; Posts: {{ blog.posts.count }}
       </div>
     </div>
   </div>
@@ -30,19 +28,58 @@
     {{ blog.description }}
   </p>
   {% endif %}
+
   {% if blog.body %}
   <div class="card" style="padding:24px 28px; margin-bottom:28px; font-size:1rem; line-height:1.8;">
     {{ blog.body|linebreaks }}
   </div>
   {% endif %}
 
+  <!-- Topic file attachments -->
+  {% with files=blog.files.all %}
+  {% if files %}
+  <div style="margin-bottom:28px;">
+    <h3 style="font-size:1.05rem; margin-bottom:16px;">📎 Attachments</h3>
+    <div class="attachment-grid">
+      {% for bf in files %}
+      {% with ptype=bf.original_name|file_preview_type %}
+      <a href="{{ bf.file.url }}" class="attachment-card" download="{{ bf.original_name }}" title="{{ bf.original_name }}">
+
+        <div class="attachment-preview">
+          {% if ptype == 'image' %}
+            <img src="{{ bf.file.url }}" alt="{{ bf.original_name }}">
+          {% elif ptype == 'video' %}
+            <video src="{{ bf.file.url }}" muted preload="metadata"></video>
+            <div class="attachment-play">▶</div>
+          {% elif ptype == 'audio' %}
+            <div class="attachment-icon-wrap">🎵</div>
+          {% elif ptype == 'pdf' %}
+            <div class="attachment-icon-wrap">📕</div>
+          {% else %}
+            <div class="attachment-icon-wrap">{{ bf.original_name|file_icon }}</div>
+          {% endif %}
+        </div>
+
+        <div class="attachment-info">
+          <span class="attachment-name">{{ bf.original_name }}</span>
+          <span class="attachment-size">{{ bf.size_display }}</span>
+        </div>
+
+      </a>
+      {% endwith %}
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
+  {% endwith %}
+
   <div class="content-grid">
     <!-- Posts -->
     <div>
       <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; flex-wrap:wrap; gap:10px;">
-        <h2 style="font-size:1.2rem;">Посты</h2>
+        <h2 style="font-size:1.2rem;">Posts</h2>
         {% if can_post %}
-        <a href="{% url 'post_create' blog.pk %}" class="btn btn-primary btn-sm">+ Новый пост</a>
+        <a href="{% url 'post_create' blog.pk %}" class="btn btn-primary btn-sm">+ New post</a>
         {% endif %}
       </div>
 
@@ -81,9 +118,9 @@
       <div class="card">
         <div class="card-body" style="text-align:center; padding:36px;">
           <div style="font-size:2.5rem; margin-bottom:10px;">✏️</div>
-          <p class="text-muted">В этом блоге пока нет постов.</p>
+          <p class="text-muted">No posts yet.</p>
           {% if can_post %}
-          <a href="{% url 'post_create' blog.pk %}" class="btn btn-primary mt-4">Написать первый пост</a>
+          <a href="{% url 'post_create' blog.pk %}" class="btn btn-primary mt-4">Write the first post</a>
           {% endif %}
         </div>
       </div>
@@ -106,22 +143,23 @@
     <aside class="sidebar">
 
       <!-- Actions -->
-      {% if is_owner %}
+      {% if user.is_staff %}
       <div class="sidebar-widget">
-        <div class="sidebar-widget-head">Управление</div>
+        <div class="sidebar-widget-head">Manage</div>
         <div class="sidebar-widget-body" style="display:flex; flex-direction:column; gap:8px;">
-          <a href="{% url 'blog_edit' blog.pk %}" class="btn btn-outline btn-sm">✏️ Редактировать</a>
-          <a href="{% url 'blog_delete' blog.pk %}" class="btn btn-ghost btn-sm" style="color:#c0392b; border-color:#f5c2c0;">🗑 Удалить блог</a>
+          <a href="{% url 'blog_edit' blog.pk %}" class="btn btn-outline btn-sm">✏️ Edit topic</a>
+          <a href="{% url 'blog_delete' blog.pk %}" class="btn btn-ghost btn-sm" style="color:#c0392b; border-color:#f5c2c0;">🗑 Delete topic</a>
         </div>
       </div>
-      {% elif is_member %}
+      {% endif %}
+      {% if is_member and not is_owner %}
       <div class="sidebar-widget">
         <div class="sidebar-widget-body">
           <form method="post" action="{% url 'blog_leave' blog.pk %}"
-                onsubmit="return confirm('Покинуть блог «{{ blog.title }}»?')">
+                onsubmit="return confirm('Leave topic «{{ blog.title }}»?')">
             {% csrf_token %}
             <button type="submit" class="btn btn-ghost btn-sm w-full" style="color:#c0392b; border-color:#f5c2c0;">
-              Покинуть блог
+              Leave topic
             </button>
           </form>
         </div>
@@ -130,7 +168,7 @@
 
       <!-- Members -->
       <div class="sidebar-widget">
-        <div class="sidebar-widget-head">Участники ({{ members.count }})</div>
+        <div class="sidebar-widget-head">Members ({{ members.count }})</div>
         <div class="sidebar-widget-body">
           <!-- Owner -->
           <div class="member-row" style="margin-bottom:8px;">
@@ -138,9 +176,9 @@
             <div class="member-name">
               <a href="{% url 'profile' blog.owner.username %}">{{ blog.owner.username }}</a>
             </div>
-            <span class="badge badge-green" style="font-size:.7rem;">Владелец</span>
+            <span class="badge badge-green" style="font-size:.7rem;">Owner</span>
           </div>
-          <!-- Members -->
+          <!-- Members list -->
           <div class="members-list">
             {% for member in members %}
             <div class="member-row">
@@ -154,25 +192,25 @@
                   {% csrf_token %}
                   <button type="submit" class="btn btn-ghost btn-sm"
                           style="padding:2px 7px; font-size:.75rem; color:#c0392b; border-color:#f5c2c0;"
-                          title="Удалить участника"
-                          onclick="return confirm('Удалить {{ member.username }} из участников?')">✕</button>
+                          title="Remove member"
+                          onclick="return confirm('Remove {{ member.username }} from members?')">✕</button>
                 </form>
                 {% endif %}
               {% endif %}
             </div>
             {% empty %}
-            <p class="text-muted text-sm">Нет участников.</p>
+            <p class="text-muted text-sm">No members.</p>
             {% endfor %}
           </div>
 
-          <!-- Add member form (any authenticated user) -->
+          <!-- Add member -->
           {% if user.is_authenticated %}
           <hr class="divider" style="margin:14px 0;">
-          <p class="text-sm" style="font-weight:600; margin-bottom:8px; color:var(--text-secondary);">Добавить участника</p>
+          <p class="text-sm" style="font-weight:600; margin-bottom:8px; color:var(--text-secondary);">Add member</p>
           <form method="post" action="{% url 'blog_add_member' blog.pk %}">
             {% csrf_token %}
             {{ add_member_form.user }}
-            <button type="submit" class="btn btn-outline btn-sm w-full mt-3">Добавить</button>
+            <button type="submit" class="btn btn-outline btn-sm w-full mt-3">Add</button>
           </form>
           {% endif %}
         </div>

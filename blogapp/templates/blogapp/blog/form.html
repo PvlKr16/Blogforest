@@ -23,28 +23,46 @@
 
           <div class="form-group">
             <label class="form-label" for="{{ form.description.id_for_label }}">{{ form.description.label }}</label>
-            {{ form.description }}
-            <div class="form-text">Short description shown in blog cards and search results.</div>
+            <textarea name="description" id="{{ form.description.id_for_label }}"
+                      class="form-control" rows="2"
+                      placeholder="Short description">{{ form.description.value|default:'' }}</textarea>
+            <div class="form-text">Shown in topic cards and search results.</div>
             {% if form.description.errors %}<ul class="errorlist">{% for e in form.description.errors %}<li>{{ e }}</li>{% endfor %}</ul>{% endif %}
           </div>
 
           <div class="form-group">
             <label class="form-label" for="{{ form.body.id_for_label }}">{{ form.body.label }}</label>
             {{ form.body }}
-            <div class="form-text">Full blog content — shown on the blog page. No size limit.</div>
+            <div class="form-text">Full content — shown on the topic page. No size limit.</div>
             {% if form.body.errors %}<ul class="errorlist">{% for e in form.body.errors %}<li>{{ e }}</li>{% endfor %}</ul>{% endif %}
           </div>
 
+          <!-- File attachments -->
           <div class="form-group">
-            <label class="form-label" for="{{ form.cover.id_for_label }}">{{ form.cover.label }}</label>
-            {% if blog.cover %}
-            <div style="margin-bottom:10px;">
-              <img src="{{ blog.cover.url }}" alt="Обложка" style="height:80px; border-radius:8px; object-fit:cover;">
-            </div>
+            <label class="form-label">Attachments</label>
+            {% if blog %}
+              {% with files=blog.files.all %}
+              {% if files %}
+              <div class="files-list" style="margin-bottom:12px;">
+                {% for bf in files %}
+                <div class="file-item">
+                  <span class="file-item-icon">📎</span>
+                  <span class="file-item-name">{{ bf.original_name }}</span>
+                  <span class="file-item-size">{{ bf.size_display }}</span>
+                  <form method="post" action="{% url 'blog_delete_file' bf.pk %}" style="margin:0;">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-ghost btn-sm"
+                            style="padding:2px 7px; color:#c0392b; border-color:#f5c2c0;"
+                            onclick="return confirm('Delete file?')">✕</button>
+                  </form>
+                </div>
+                {% endfor %}
+              </div>
+              {% endif %}
+              {% endwith %}
             {% endif %}
-            {{ form.cover }}
-            <div class="form-text">Максимум 5 МБ. Рекомендуемый размер: 1200×400 px.</div>
-            {% if form.cover.errors %}<ul class="errorlist">{% for e in form.cover.errors %}<li>{{ e }}</li>{% endfor %}</ul>{% endif %}
+            <input type="file" name="blog_files" class="form-control" multiple>
+            <div class="form-text">Any file type. Max 5 MB per file. Multiple files allowed.</div>
           </div>
 
           <div class="form-group">
@@ -54,7 +72,7 @@
                 {{ form.is_public.label }}
               </label>
             </div>
-            <div class="form-text">Открытый блог виден всем посетителям. Закрытый — только участникам.</div>
+            <div class="form-text">Public topics are visible to everyone. Private — members only.</div>
           </div>
 
           <div class="form-group">
@@ -66,18 +84,18 @@
                 {{ choice.choice_label }}
               </label>
               {% empty %}
-              <p class="text-muted text-sm">Нет других пользователей.</p>
+              <p class="text-muted text-sm">No other users.</p>
               {% endfor %}
             </div>
-            <div class="form-text">Выбранные пользователи смогут читать и писать посты в этом блоге.</div>
+            <div class="form-text">Selected users will be able to read and post in this topic.</div>
           </div>
 
           <div style="display:flex; gap:12px; flex-wrap:wrap; margin-top:8px;">
             <button type="submit" class="btn btn-primary btn-lg">{{ action }}</button>
             {% if blog %}
-            <a href="{{ blog.get_absolute_url }}" class="btn btn-ghost btn-lg">Отмена</a>
+            <a href="{{ blog.get_absolute_url }}" class="btn btn-ghost btn-lg">Cancel</a>
             {% else %}
-            <a href="{% url 'blog_list' %}" class="btn btn-ghost btn-lg">Отмена</a>
+            <a href="{% url 'blog_list' %}" class="btn btn-ghost btn-lg">Cancel</a>
             {% endif %}
           </div>
         </form>

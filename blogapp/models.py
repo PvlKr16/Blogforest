@@ -37,7 +37,6 @@ class Blog(models.Model):
     is_public = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-    cover = models.ImageField(upload_to='blog_covers/', blank=True, null=True)
 
     class Meta:
         verbose_name = 'Blog'
@@ -66,6 +65,36 @@ class Blog(models.Model):
         if not user.is_authenticated:
             return False
         return user == self.owner or self.members.filter(pk=user.pk).exists()
+
+
+def blog_file_path(instance, filename):
+    return f'blog_files/{instance.blog.pk}/{filename}'
+
+
+class BlogFile(models.Model):
+    blog = models.ForeignKey(
+        'Blog', on_delete=models.CASCADE,
+        related_name='files',
+    )
+    file = models.FileField(upload_to=blog_file_path)
+    original_name = models.CharField(max_length=255)
+    size = models.PositiveIntegerField(default=0)
+    uploaded_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = 'Blog file'
+        verbose_name_plural = 'Blog files'
+
+    def __str__(self):
+        return self.original_name
+
+    def size_display(self):
+        size = self.size
+        for unit in ['B', 'KB', 'MB', 'GB']:
+            if size < 1024:
+                return f'{size:.1f} {unit}'
+            size /= 1024
+        return f'{size:.1f} TB'
 
 
 def post_image_path(instance, filename):

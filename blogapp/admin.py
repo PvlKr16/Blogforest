@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Blog, Post, PostFile, Comment, Tag
+from .models import Blog, Post, PostFile, Comment, Tag, BlogFile
 
 
 @admin.register(Tag)
@@ -25,6 +25,12 @@ class PostAdmin(admin.ModelAdmin):
     date_hierarchy = 'created_at'
 
 
+class BlogFileInline(admin.TabularInline):
+    model = BlogFile
+    extra = 0
+    readonly_fields = ('original_name', 'size', 'uploaded_at')
+
+
 class PostInline(admin.TabularInline):
     model = Post
     extra = 0
@@ -39,7 +45,7 @@ class BlogAdmin(admin.ModelAdmin):
     list_filter = ('is_public', 'created_at')
     search_fields = ('title', 'owner__username')
     filter_horizontal = ('members',)
-    inlines = [PostInline]
+    inlines = [BlogFileInline, PostInline]
 
     def member_count(self, obj):
         return obj.members.count()
@@ -51,3 +57,4 @@ class CommentAdmin(admin.ModelAdmin):
     list_display = ('author', 'post', 'created_at')
     list_filter = ('created_at',)
     search_fields = ('author__username', 'content', 'post__title')
+    

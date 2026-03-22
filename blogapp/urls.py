@@ -28,6 +28,7 @@ urlpatterns = [
     path('posts/<int:pk>/edit/', views.post_edit, name='post_edit'),
     path('posts/<int:pk>/delete/', views.post_delete, name='post_delete'),
     path('files/<int:file_pk>/delete/', views.delete_file, name='delete_file'),
+    path('blog-files/<int:file_pk>/delete/', views.blog_delete_file, name='blog_delete_file'),
 
     # Tags
     path('tag/<slug:slug>/', views.tag_posts, name='tag_posts'),

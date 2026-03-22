@@ -62,19 +62,17 @@ class BlogForm(forms.ModelForm):
 
     class Meta:
         model = Blog
-        fields = ('title', 'description', 'body', 'is_public', 'cover', 'members')
+        fields = ('title', 'description', 'body', 'is_public', 'members')
         labels = {
             'title': 'Title',
             'description': 'Description',
             'body': 'Content',
-            'is_public': 'Public blog (visible to everyone)',
-            'cover': 'Cover image',
+            'is_public': 'Public topic (visible to everyone)',
         }
         widgets = {
-            'title': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Blog title'}),
-            'description': forms.Textarea(attrs={'class': 'form-control', 'rows': 3, 'placeholder': 'Short description'}),
-            'body': forms.Textarea(attrs={'class': 'form-control', 'rows': 10, 'placeholder': 'Full blog content...'}),
-            'cover': forms.FileInput(attrs={'class': 'form-control', 'accept': 'image/*'}),
+            'title': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Topic title'}),
+            'description': forms.Textarea(attrs={'class': 'form-control', 'rows': 2, 'placeholder': 'Short description'}),
+            'body': forms.Textarea(attrs={'class': 'form-control', 'rows': 10, 'placeholder': 'Full topic content...'}),
             'is_public': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
         }
 
@@ -85,14 +83,7 @@ class BlogForm(forms.ModelForm):
             # Exclude the owner from the members list
             self.fields['members'].queryset = User.objects.exclude(pk=self.owner.pk)
 
-    def clean_cover(self):
-        cover = self.cleaned_data.get('cover')
-        if cover and hasattr(cover, 'size'):
-            if cover.size > settings.MAX_IMAGE_SIZE:
-                raise forms.ValidationError(
-                    f'Image size must not exceed {settings.MAX_IMAGE_SIZE // (1024 * 1024)} MB.'
-                )
-        return cover
+
 
 
 class PostForm(forms.ModelForm):

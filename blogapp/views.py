@@ -8,7 +8,7 @@ from django.http import Http404, JsonResponse
 from django.core.paginator import Paginator
 from django.views.decorators.http import require_POST
 
-from .models import Blog, Post, Comment, Tag, PostFile
+from .models import Blog, Post, Comment, Tag, PostFile, BlogFile
 from .forms import (
     RegistrationForm, LoginForm, BlogForm, PostForm,
     CommentForm, SearchForm, AddMemberForm,
@@ -192,33 +192,52 @@ def blog_create(request):
             blog.owner = request.user
             blog.save()
             form.save_m2m()
-            messages.success(request, 'Blog created successfully!')
+            # Handle file attachments (max 5 MB each, any format)
+            for f in request.FILES.getlist('blog_files'):
+                if f.size > 5 * 1024 * 1024:
+                    messages.warning(request, f'File "{f.name}" skipped: exceeds the 5 MB limit.')
+                    continue
+                BlogFile.objects.create(blog=blog, file=f, original_name=f.name, size=f.size)
+            messages.success(request, 'Topic created successfully!')
             return redirect('blog_detail', pk=blog.pk)
     else:
         form = BlogForm(owner=request.user)
-    return render(request, 'blogapp/blog/form.html', {'form': form, 'action': 'Create blog'})
+    return render(request, 'blogapp/blog/form.html', {'form': form, 'action': 'Create topic'})
 
 
 @login_required
 def blog_edit(request, pk):
-    blog = get_object_or_404(Blog, pk=pk, owner=request.user)
+    blog = get_object_or_404(Blog, pk=pk)
+    # Only admins can edit a topic after it has been published
+    if not request.user.is_staff:
+        messages.error(request, 'Only administrators can edit topics.')
+        return redirect('blog_detail', pk=pk)
     if request.method == 'POST':
-        form = BlogForm(request.POST, request.FILES, instance=blog, owner=request.user)
+        form = BlogForm(request.POST, request.FILES, instance=blog, owner=blog.owner)
         if form.is_valid():
             form.save()
-            messages.success(request, 'Blog updated!')
+            for f in request.FILES.getlist('blog_files'):
+                if f.size > 5 * 1024 * 1024:
+                    messages.warning(request, f'File "{f.name}" skipped: exceeds the 5 MB limit.')
+                    continue
+                BlogFile.objects.create(blog=blog, file=f, original_name=f.name, size=f.size)
+            messages.success(request, 'Topic updated!')
             return redirect('blog_detail', pk=blog.pk)
     else:
-        form = BlogForm(instance=blog, owner=request.user)
-    return render(request, 'blogapp/blog/form.html', {'form': form, 'blog': blog, 'action': 'Edit blog'})
+        form = BlogForm(instance=blog, owner=blog.owner)
+    return render(request, 'blogapp/blog/form.html', {'form': form, 'blog': blog, 'action': 'Edit topic'})
 
 
 @login_required
 def blog_delete(request, pk):
-    blog = get_object_or_404(Blog, pk=pk, owner=request.user)
+    blog = get_object_or_404(Blog, pk=pk)
+    # Only admins can delete a topic
+    if not request.user.is_staff:
+        messages.error(request, 'Only administrators can delete topics.')
+        return redirect('blog_detail', pk=pk)
     if request.method == 'POST':
         blog.delete()
-        messages.success(request, 'Blog deleted.')
+        messages.success(request, 'Topic deleted.')
         return redirect('blog_list')
     return render(request, 'blogapp/blog/delete_confirm.html', {'blog': blog})
 
@@ -396,6 +415,22 @@ def delete_file(request, file_pk):
     pf.delete()
     messages.success(request, 'File deleted.')
     return redirect('post_edit', pk=post.pk)
+
+
+# ─── Blog files ──────────────────────────────────────────────────────────────
+
+@login_required
+@require_POST
+def blog_delete_file(request, file_pk):
+    bf = get_object_or_404(BlogFile, pk=file_pk)
+    blog = bf.blog
+    if request.user != blog.owner:
+        messages.error(request, 'Only the topic owner can delete files.')
+        return redirect('blog_edit', pk=blog.pk)
+    bf.file.delete(save=False)
+    bf.delete()
+    messages.success(request, 'File deleted.')
+    return redirect('blog_edit', pk=blog.pk)
 
 
 # ─── Tags ─────────────────────────────────────────────────────────────────────
