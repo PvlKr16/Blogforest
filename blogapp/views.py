@@ -19,6 +19,29 @@ from .forms import (
 )
 
 
+def get_visible_blogs(user):
+    """
+    Return the queryset of blogs visible to the given user.
+    - Guest users: only blogs where they are a member or owner.
+    - Regular authenticated users: all public blogs + their private blogs.
+    - Anonymous users: public blogs only.
+    """
+    if user.is_authenticated:
+        is_guest = getattr(getattr(user, 'profile', None), 'is_guest', False)
+        if is_guest:
+            # Guests see only blogs they belong to
+            return Blog.objects.filter(
+                Q(owner=user) | Q(members=user)
+            ).distinct()
+        # Regular users see all public blogs plus their private ones
+        public = Blog.objects.filter(is_public=True)
+        private = Blog.objects.filter(
+            Q(owner=user) | Q(members=user), is_public=False
+        )
+        return (public | private).distinct()
+    return Blog.objects.filter(is_public=True)
+
+
 # ─── Auth ────────────────────────────────────────────────────────────────────
 
 @login_required
@@ -73,15 +96,7 @@ def home(request):
     query = ''
     active_scopes = []
 
-    public_blogs = Blog.objects.filter(is_public=True)
-    if request.user.is_authenticated:
-        private_blogs = Blog.objects.filter(
-            Q(owner=request.user) | Q(members=request.user),
-            is_public=False
-        )
-        visible_blogs = (public_blogs | private_blogs).distinct()
-    else:
-        visible_blogs = public_blogs
+    visible_blogs = get_visible_blogs(request.user)
 
     # Latest posts from all blogs visible to the current user
     posts_qs = Post.objects.filter(
@@ -157,6 +172,10 @@ def blog_list(request):
 def blog_detail(request, pk):
     blog = get_object_or_404(Blog, pk=pk)
     if not blog.can_view(request.user):
+        raise Http404
+    # Guests can only view blogs they are members of
+    is_guest = getattr(getattr(request.user, 'profile', None), 'is_guest', False)
+    if is_guest and not blog.is_member(request.user):
         raise Http404
 
     # Sort order: 'asc' = oldest first (default), 'desc' = newest first
@@ -416,14 +435,7 @@ def blog_delete_file(request, file_pk):
 
 def tag_posts(request, slug):
     tag = get_object_or_404(Tag, slug=slug)
-    if request.user.is_authenticated:
-        public_blogs = Blog.objects.filter(is_public=True)
-        private_blogs = Blog.objects.filter(
-            Q(owner=request.user) | Q(members=request.user), is_public=False
-        )
-        visible_blogs = (public_blogs | private_blogs).distinct()
-    else:
-        visible_blogs = Blog.objects.filter(is_public=True)
+    visible_blogs = get_visible_blogs(request.user)
 
     posts = Post.objects.filter(
         tags=tag, blog__in=visible_blogs, is_published=True
@@ -442,14 +454,7 @@ def tag_posts(request, slug):
 
 def profile(request, username):
     profile_user = get_object_or_404(User, username=username)
-    if request.user.is_authenticated:
-        public_blogs = Blog.objects.filter(is_public=True)
-        private_blogs = Blog.objects.filter(
-            Q(owner=request.user) | Q(members=request.user), is_public=False
-        )
-        visible_blogs = (public_blogs | private_blogs).distinct()
-    else:
-        visible_blogs = Blog.objects.filter(is_public=True)
+    visible_blogs = get_visible_blogs(request.user)
 
     user_blogs = Blog.objects.filter(owner=profile_user).filter(pk__in=visible_blogs)
     user_posts = Post.objects.filter(

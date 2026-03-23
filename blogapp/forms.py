@@ -2,7 +2,7 @@ from django import forms
 from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
 from django.contrib.auth.models import User
 from django.conf import settings
-from .models import Blog, Post, Comment, Tag, PostFile
+from .models import Blog, Post, Comment, Tag, PostFile, UserProfile
 
 
 class MultipleFileInput(forms.FileInput):
@@ -17,6 +17,12 @@ class RegistrationForm(UserCreationForm):
     email = forms.EmailField(required=True, label='Email')
     first_name = forms.CharField(max_length=30, required=False, label='First name')
     last_name = forms.CharField(max_length=30, required=False, label='Last name')
+    is_guest = forms.BooleanField(
+        required=False,
+        label='Guest',
+        help_text='Guests can only see topics they are members of.',
+        widget=forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+    )
 
     class Meta:
         model = User
@@ -24,14 +30,23 @@ class RegistrationForm(UserCreationForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        for field in self.fields.values():
-            field.widget.attrs.update({'class': 'form-control'})
+        for name, field in self.fields.items():
+            if name != 'is_guest':
+                field.widget.attrs.update({'class': 'form-control'})
 
     def clean_email(self):
         email = self.cleaned_data.get('email', '').lower()
         if User.objects.filter(email__iexact=email).exists():
             raise forms.ValidationError('A user with this email already exists.')
         return email
+
+    def save(self, commit=True):
+        user = super().save(commit=commit)
+        if commit:
+            profile, _ = UserProfile.objects.get_or_create(user=user)
+            profile.is_guest = self.cleaned_data.get('is_guest', False)
+            profile.save()
+        return user
 
 
 class LoginForm(forms.Form):

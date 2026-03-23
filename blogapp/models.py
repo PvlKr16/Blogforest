@@ -5,6 +5,19 @@ from django.conf import settings
 import os
 
 
+class UserProfile(models.Model):
+    """Extends the built-in User with a guest role flag."""
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='profile')
+    is_guest = models.BooleanField(default=False)
+
+    class Meta:
+        verbose_name = 'User profile'
+        verbose_name_plural = 'User profiles'
+
+    def __str__(self):
+        return f'{self.user.username} ({"guest" if self.is_guest else "regular"})'
+
+
 class Tag(models.Model):
     name = models.CharField(max_length=50, unique=True)
     slug = models.SlugField(max_length=50, unique=True)

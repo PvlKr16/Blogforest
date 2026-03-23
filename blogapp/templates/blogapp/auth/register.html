@@ -1,33 +1,50 @@
 {% extends 'blogapp/base.html' %}
-{% block title %}Регистрация — BlogForest{% endblock %}
+{% block title %}New user — BlogForest{% endblock %}
 
 {% block content %}
 <div class="container">
   <div class="auth-card" style="max-width:500px;">
     <div class="auth-card-head">
-      <h2>Новый пользователь</h2>
-      <p>Создание аккаунта администратором</p>
+      <h2>New user</h2>
+      <p>Creating account as administrator</p>
     </div>
     <div class="auth-card-body">
       <form method="post" novalidate>
         {% csrf_token %}
         {% for field in form %}
-        <div class="form-group">
-          <label class="form-label" for="{{ field.id_for_label }}">{{ field.label }}</label>
-          {{ field }}
-          {% if field.help_text %}
-          <div class="form-text">{{ field.help_text }}</div>
+          {% if field.name == 'is_guest' %}
+          <div class="form-group">
+            <div class="form-check">
+              {{ field }}
+              <label for="{{ field.id_for_label }}" class="form-label mb-0" style="cursor:pointer;">
+                {{ field.label }}
+              </label>
+            </div>
+            {% if field.help_text %}
+            <div class="form-text">{{ field.help_text }}</div>
+            {% endif %}
+            {% if field.errors %}
+            <ul class="errorlist">{% for e in field.errors %}<li>{{ e }}</li>{% endfor %}</ul>
+            {% endif %}
+          </div>
+          {% else %}
+          <div class="form-group">
+            <label class="form-label" for="{{ field.id_for_label }}">{{ field.label }}</label>
+            {{ field }}
+            {% if field.help_text %}
+            <div class="form-text">{{ field.help_text }}</div>
+            {% endif %}
+            {% if field.errors %}
+            <ul class="errorlist">{% for e in field.errors %}<li>{{ e }}</li>{% endfor %}</ul>
+            {% endif %}
+          </div>
           {% endif %}
-          {% if field.errors %}
-          <ul class="errorlist">{% for e in field.errors %}<li>{{ e }}</li>{% endfor %}</ul>
-          {% endif %}
-        </div>
         {% endfor %}
-        <button type="submit" class="btn btn-primary w-full btn-lg">Создать пользователя</button>
+        <button type="submit" class="btn btn-primary w-full btn-lg">Create user</button>
       </form>
       <hr class="divider">
       <p class="text-sm" style="text-align:center; color: var(--text-muted);">
-        <a href="{% url 'home' %}">← На главную</a>
+        <a href="{% url 'home' %}">← Back to home</a>
       </p>
     </div>
   </div>

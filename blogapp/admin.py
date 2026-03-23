@@ -1,6 +1,34 @@
 from django.contrib import admin
-from .models import Blog, Post, PostFile, Comment, Tag, BlogFile
+from django.contrib.auth.admin import UserAdmin
+from django.contrib.auth.models import User
+from .models import Blog, Post, PostFile, Comment, Tag, BlogFile, UserProfile
 
+
+# ── UserProfile inline in User admin ─────────────────────────────────────────
+
+class UserProfileInline(admin.StackedInline):
+    model = UserProfile
+    can_delete = False
+    verbose_name = 'Role'
+    fields = ('is_guest',)
+
+
+class CustomUserAdmin(UserAdmin):
+    inlines = (UserProfileInline,)
+    list_display = ('username', 'email', 'first_name', 'last_name', 'is_staff', 'get_is_guest')
+
+    def get_is_guest(self, obj):
+        return getattr(getattr(obj, 'profile', None), 'is_guest', False)
+    get_is_guest.boolean = True
+    get_is_guest.short_description = 'Guest'
+
+
+# Re-register User with custom admin
+admin.site.unregister(User)
+admin.site.register(User, CustomUserAdmin)
+
+
+# ── App models ────────────────────────────────────────────────────────────────
 
 @admin.register(Tag)
 class TagAdmin(admin.ModelAdmin):
@@ -49,7 +77,7 @@ class BlogAdmin(admin.ModelAdmin):
 
     def member_count(self, obj):
         return obj.members.count()
-    member_count.short_description = 'Участников'
+    member_count.short_description = 'Members'
 
 
 @admin.register(Comment)
@@ -57,4 +85,3 @@ class CommentAdmin(admin.ModelAdmin):
     list_display = ('author', 'post', 'created_at')
     list_filter = ('created_at',)
     search_fields = ('author__username', 'content', 'post__title')
-    

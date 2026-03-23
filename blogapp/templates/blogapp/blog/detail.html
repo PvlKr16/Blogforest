@@ -218,6 +218,7 @@
             <div class="avatar">{{ blog.owner.username|first|upper }}</div>
             <div class="member-name">
               <a href="{% url 'profile' blog.owner.username %}">{{ blog.owner.username }}</a>
+              {% if blog.owner.profile.is_guest %}<span class="text-muted text-sm">(guest)</span>{% endif %}
             </div>
             <span class="badge badge-green" style="font-size:.7rem;">Owner</span>
           </div>
@@ -228,6 +229,7 @@
               <div class="avatar">{{ member.username|first|upper }}</div>
               <div class="member-name">
                 <a href="{% url 'profile' member.username %}">{{ member.username }}</a>
+                {% if member.profile.is_guest %}<span class="text-muted text-sm">(guest)</span>{% endif %}
               </div>
               {% if user == member %}
               <form method="post" action="{% url 'blog_remove_member' blog.pk member.pk %}" style="margin:0;">
