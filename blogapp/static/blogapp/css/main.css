@@ -1042,3 +1042,44 @@ textarea.form-control { resize: vertical; min-height: 100px; }
   color: #fff !important;
 }
 .sort-btn-active:hover { background: var(--green-mid); }
+
+
+
+/* ── Topic card (home feed) ──────────────────────────────────── */
+.topic-card { margin-bottom: 16px; }
+
+.topic-card-title {
+  font-size: 1.2rem;
+  margin-bottom: 6px;
+  line-height: 1.35;
+}
+.topic-card-title a { color: var(--text-primary); }
+.topic-card-title a:hover { color: var(--green-deep); }
+
+.topic-card-meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+/* Description — clamp to 1 line */
+.topic-card-description {
+  font-size: .9rem;
+  color: var(--text-secondary);
+  display: -webkit-box;
+  -webkit-line-clamp: 1;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  margin-bottom: 6px;
+}
+
+/* Body — clamp to 3 lines */
+.topic-card-body {
+  font-size: .9rem;
+  color: var(--text-muted);
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}

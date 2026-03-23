@@ -4,7 +4,7 @@ from django.contrib.auth import login, logout, authenticate
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.contrib import messages
-from django.db.models import Q
+from django.db.models import Q, Max, Subquery, OuterRef
 from django.http import Http404, JsonResponse
 from django.core.paginator import Paginator
 from django.views.decorators.http import require_POST
@@ -103,16 +103,16 @@ def home(request):
 
     visible_blogs = get_visible_blogs(request.user)
 
-    # Latest posts from all blogs visible to the current user
-    posts_qs = Post.objects.filter(
-        blog__in=visible_blogs, is_published=True
-    ).select_related('author', 'blog').prefetch_related('tags')
-
     if search_form.is_valid():
         query = search_form.cleaned_data.get('q', '').strip()
         active_scopes = search_form.cleaned_data.get('scope') or DEFAULT_SEARCH_SCOPES
         date_from = search_form.cleaned_data.get('date_from')
         date_to = search_form.cleaned_data.get('date_to')
+
+        # Search returns matching posts across visible blogs
+        posts_qs = Post.objects.filter(
+            blog__in=visible_blogs, is_published=True
+        ).select_related('author', 'blog').prefetch_related('tags')
 
         if query:
             filters = Q()
@@ -128,26 +128,41 @@ def home(request):
                 filters |= Q(comments__content__icontains=query)
             posts_qs = posts_qs.filter(filters).distinct()
 
-        # Date range filter applies regardless of query text
         if date_from:
             posts_qs = posts_qs.filter(created_at__date__gte=date_from)
         if date_to:
             posts_qs = posts_qs.filter(created_at__date__lte=date_to)
 
+        paginator = Paginator(posts_qs, 10)
+        page = request.GET.get('page')
+        items = paginator.get_page(page)
+        is_search = True
+    else:
+        # Default view: list of visible blogs sorted by latest comment (post) date
+        # Annotate each blog with the timestamp of its most recent post
+        blogs_with_activity = visible_blogs.annotate(
+            last_post_at=Max('posts__created_at')
+        ).order_by(
+            # Use the annotated field — blogs with no posts sort to bottom
+            '-last_post_at'
+        ).select_related('owner').prefetch_related('members')
 
-    paginator = Paginator(posts_qs, 10)
-    page = request.GET.get('page')
-    posts = paginator.get_page(page)
+        paginator = Paginator(blogs_with_activity, 10)
+        page = request.GET.get('page')
+        items = paginator.get_page(page)
+        is_search = False
 
-    blogs = visible_blogs.order_by('-created_at')[:8]
+    # Sidebar data
+    sidebar_blogs = visible_blogs.order_by('-created_at')[:8]
     popular_tags = Tag.objects.filter(
         post__blog__in=visible_blogs,
         post__is_published=True
     ).distinct()[:20]
 
     return render(request, 'blogapp/home.html', {
-        'posts': posts,
-        'blogs': blogs,
+        'items': items,
+        'is_search': is_search,
+        'sidebar_blogs': sidebar_blogs,
         'popular_tags': popular_tags,
         'search_form': search_form,
         'query': query,
