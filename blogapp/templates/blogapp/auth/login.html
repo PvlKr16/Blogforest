@@ -1,32 +1,44 @@
-{% extends 'blogapp/base.html' %}
-{% block title %}Вход — BlogForest{% endblock %}
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Log in — BlogForest</title>
+  <link rel="stylesheet" href="{% static 'blogapp/css/main.css' %}">
+</head>
+<body class="login-page">
+  <div class="login-wrap">
+    <div class="login-logo">Blog<span>Forest</span></div>
 
-{% block content %}
-<div class="container">
-  <div class="auth-card">
-    <div class="auth-card-head">
-      <h2>Добро пожаловать</h2>
-      <p>Войдите в свой аккаунт</p>
-    </div>
-    <div class="auth-card-body">
-      <form method="post" novalidate>
-        {% csrf_token %}
-        {% for field in form %}
-        <div class="form-group">
-          <label class="form-label" for="{{ field.id_for_label }}">{{ field.label }}</label>
-          {{ field }}
-          {% if field.errors %}
-          <ul class="errorlist">{% for e in field.errors %}<li>{{ e }}</li>{% endfor %}</ul>
-          {% endif %}
-        </div>
-        {% endfor %}
-        <button type="submit" class="btn btn-primary w-full btn-lg">Войти</button>
-      </form>
-      <hr class="divider">
-      <p class="text-sm" style="text-align:center; color: var(--text-muted);">
-        Нет аккаунта? <a href="{% url 'register' %}">Зарегистрируйтесь</a>
-      </p>
+    {% if messages %}
+    {% for msg in messages %}
+    <div class="alert alert-{% if msg.tags == 'error' %}error{% elif msg.tags == 'success' %}success{% else %}info{% endif %}"
+         style="margin-bottom:16px;">{{ msg }}</div>
+    {% endfor %}
+    {% endif %}
+
+    <div class="auth-card" style="margin:0;">
+      <div class="auth-card-head">
+        <h2>Welcome</h2>
+        <p>Sign in to your account</p>
+      </div>
+      <div class="auth-card-body">
+        <form method="post" novalidate>
+          {% csrf_token %}
+          {% for field in form %}
+          <div class="form-group">
+            <label class="form-label" for="{{ field.id_for_label }}">{{ field.label }}</label>
+            {{ field }}
+            {% if field.errors %}
+            <ul class="errorlist">{% for e in field.errors %}<li>{{ e }}</li>{% endfor %}</ul>
+            {% endif %}
+          </div>
+          {% endfor %}
+          <button type="submit" class="btn btn-primary w-full btn-lg">Log in</button>
+        </form>
+      </div>
     </div>
   </div>
-</div>
-{% endblock %}
+</body>
+</html>

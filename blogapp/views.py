@@ -74,8 +74,8 @@ def login_view(request):
             )
             if user is not None:
                 login(request, user)
-                next_url = request.GET.get('next', 'home')
-                return redirect(next_url)
+                next_url = request.GET.get('next', '')
+                return redirect(next_url if next_url else 'home')
             else:
                 messages.error(request, 'Invalid email or password.')
     else:
@@ -85,12 +85,17 @@ def login_view(request):
 
 def logout_view(request):
     logout(request)
-    return redirect('home')
+    return redirect('login')
 
 
 # ─── Home / Search ───────────────────────────────────────────────────────────
 
+@login_required
 def home(request):
+    # Anonymous users see only the login page
+    if not request.user.is_authenticated:
+        return redirect('login')
+
     # Bind the form only when the user submitted a search (q param present)
     search_form = SearchForm(request.GET if 'q' in request.GET else None)
     query = ''
@@ -152,16 +157,10 @@ def home(request):
 
 # ─── Blogs ───────────────────────────────────────────────────────────────────
 
+@login_required
+@login_required
 def blog_list(request):
-    if request.user.is_authenticated:
-        public_blogs = Blog.objects.filter(is_public=True)
-        private_blogs = Blog.objects.filter(
-            Q(owner=request.user) | Q(members=request.user),
-            is_public=False
-        )
-        blogs = (public_blogs | private_blogs).distinct().order_by('-created_at')
-    else:
-        blogs = Blog.objects.filter(is_public=True).order_by('-created_at')
+    blogs = get_visible_blogs(request.user).order_by('-created_at')
 
     paginator = Paginator(blogs, 12)
     page = request.GET.get('page')
@@ -169,6 +168,7 @@ def blog_list(request):
     return render(request, 'blogapp/blog/list.html', {'blogs': blogs_page})
 
 
+@login_required
 def blog_detail(request, pk):
     blog = get_object_or_404(Blog, pk=pk)
     if not blog.can_view(request.user):
@@ -433,6 +433,8 @@ def blog_delete_file(request, file_pk):
 
 # ─── Tags ─────────────────────────────────────────────────────────────────────
 
+@login_required
+@login_required
 def tag_posts(request, slug):
     tag = get_object_or_404(Tag, slug=slug)
     visible_blogs = get_visible_blogs(request.user)
@@ -452,6 +454,8 @@ def tag_posts(request, slug):
 
 # ─── Profile ──────────────────────────────────────────────────────────────────
 
+@login_required
+@login_required
 def profile(request, username):
     profile_user = get_object_or_404(User, username=username)
     visible_blogs = get_visible_blogs(request.user)
