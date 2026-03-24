@@ -79,7 +79,6 @@
       </div>
 
       <nav class="header-nav" id="main-nav">
-        <a href="{% url 'blog_list' %}" class="nav-link">Topics</a>
         {% if user.is_authenticated %}
           <a href="{% url 'blog_create' %}" class="nav-link">+ New topic</a>
           {% if user.is_staff %}

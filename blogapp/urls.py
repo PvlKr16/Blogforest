@@ -11,7 +11,7 @@ urlpatterns = [
     path('', views.home, name='home'),
 
     # Blogs
-    path('blogs/', views.blog_list, name='blog_list'),
+    # path('blogs/', views.blog_list, name='blog_list'),
     path('blogs/create/', views.blog_create, name='blog_create'),
     path('blogs/<int:pk>/', views.blog_detail, name='blog_detail'),
     path('blogs/<int:pk>/edit/', views.blog_edit, name='blog_edit'),
