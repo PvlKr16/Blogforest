@@ -1,6 +1,6 @@
 /* ================================================================
    BlogForest — main.js
-   Global UI behaviour: mobile nav, search dropdown
+   Global UI behaviour: mobile nav, search dropdown, password toggle
    ================================================================ */
 
 document.addEventListener('DOMContentLoaded', function () {
@@ -58,5 +58,15 @@ document.addEventListener('DOMContentLoaded', function () {
       openDropdown();
     }
   }
+
+  // ── Password toggle ───────────────────────────────────────────
+  document.querySelectorAll('.password-toggle').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      const input = btn.closest('.password-wrap').querySelector('input');
+      const isHidden = input.type === 'password';
+      input.type = isHidden ? 'text' : 'password';
+      btn.classList.toggle('visible', isHidden);
+    });
+  });
 
 });
