@@ -90,14 +90,14 @@
             </div>
 
             <!-- Description — one line -->
-            {% if blog.description %}
-            <p class="topic-card-description">{{ blog.description }}</p>
-            {% endif %}
+<!--            {% if blog.description %}-->
+<!--            <p class="topic-card-description">{{ blog.description }}</p>-->
+<!--            {% endif %}-->
 
-            <!-- Body — three lines -->
-            {% if blog.body %}
-            <p class="topic-card-body">{{ blog.body }}</p>
-            {% endif %}
+<!--            &lt;!&ndash; Body — three lines &ndash;&gt;-->
+<!--            {% if blog.body %}-->
+<!--            <p class="topic-card-body">{{ blog.body }}</p>-->
+<!--            {% endif %}-->
 
           </div>
           <div class="card-footer">
@@ -159,7 +159,6 @@
           {% empty %}
           <p class="text-muted text-sm">No topics yet.</p>
           {% endfor %}
-<!--          <a href="{% url 'blog_create' %}" class="btn btn-outline btn-sm w-full mt-3">+ New topic</a>-->
         </div>
       </div>
       {% endif %}

@@ -127,7 +127,7 @@ class Post(models.Model):
         User, on_delete=models.CASCADE,
         related_name='posts',
     )
-    title = models.CharField(max_length=300)
+    title = models.CharField(max_length=300, blank=True, default='')
     content = models.TextField()
     image = models.ImageField(upload_to=post_image_path, blank=True, null=True)
     tags = models.ManyToManyField(Tag, blank=True)
@@ -194,3 +194,4 @@ class Comment(models.Model):
 
     def __str__(self):
         return f'Comment by {self.author.username} on "{self.post.title}"'
+    

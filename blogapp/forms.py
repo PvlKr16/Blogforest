@@ -119,9 +119,13 @@ class PostForm(forms.ModelForm):
             'content': 'Content',
         }
         widgets = {
-            'title': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Comment title'}),
+            'title': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Comment title (optional)'}),
             'content': forms.Textarea(attrs={'class': 'form-control', 'rows': 10, 'placeholder': 'Write your comment...'}),
         }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['title'].required = False
 
     def save_tags(self, post):
         """Parse the comma-separated tags input and attach Tag objects to the post."""
