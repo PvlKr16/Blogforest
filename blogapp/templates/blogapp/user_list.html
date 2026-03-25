@@ -1,0 +1,53 @@
+{% extends 'blogapp/base.html' %}
+{% block title %}Contacts — BlogForest{% endblock %}
+
+{% block content %}
+<div class="page-hero">
+  <div class="container">
+    <h1>Contacts</h1>
+    <p>{{ users.count }} user{{ users.count|pluralize }}</p>
+  </div>
+</div>
+
+<div class="container content-full">
+  <div style="max-width:640px;">
+    {% for u in users %}
+    <div class="card" style="margin-bottom:12px;">
+      <div class="card-body" style="display:flex; align-items:center; gap:14px; padding:14px 18px;">
+        <!-- Avatar -->
+        {% if u.profile.avatar %}
+        <img src="{{ u.profile.avatar.url }}" alt="{{ u.username }}"
+             style="width:44px; height:44px; border-radius:50%; object-fit:cover; flex-shrink:0;">
+        {% else %}
+        <div class="avatar avatar-lg">{{ u.username|first|upper }}</div>
+        {% endif %}
+
+        <!-- Info -->
+        <div style="flex:1; min-width:0;">
+          <div style="font-weight:600; font-size:.95rem;">
+            <a href="{% url 'profile' u.username %}">{{ u.username }}</a>
+            {% if u.profile.is_guest %}
+            <span class="text-muted text-sm">(guest)</span>
+            {% endif %}
+            {% if u.is_staff %}
+            <span class="badge badge-green" style="font-size:.7rem; margin-left:4px;">admin</span>
+            {% endif %}
+          </div>
+          {% if u.get_full_name %}
+          <div class="text-sm text-muted">{{ u.get_full_name }}</div>
+          {% endif %}
+        </div>
+
+        <span class="text-muted text-sm">since {{ u.date_joined|date:"Y-m" }}</span>
+      </div>
+    </div>
+    {% empty %}
+    <div class="card">
+      <div class="card-body" style="text-align:center; padding:40px;">
+        <p class="text-muted">No users found.</p>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}

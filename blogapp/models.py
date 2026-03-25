@@ -5,10 +5,15 @@ from django.conf import settings
 import os
 
 
+def avatar_upload_path(instance, filename):
+    return f'avatars/{instance.user.pk}/{filename}'
+
+
 class UserProfile(models.Model):
-    """Extends the built-in User with a guest role flag."""
+    """Extends the built-in User with a guest role flag and avatar photo."""
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='profile')
     is_guest = models.BooleanField(default=False)
+    avatar = models.ImageField(upload_to=avatar_upload_path, blank=True, null=True)
 
     class Meta:
         verbose_name = 'User profile'
@@ -194,4 +199,3 @@ class Comment(models.Model):
 
     def __str__(self):
         return f'Comment by {self.author.username} on "{self.post.title}"'
-    

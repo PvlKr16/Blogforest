@@ -1112,3 +1112,20 @@ textarea.form-control { resize: vertical; min-height: 100px; }
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
+
+/* ── Profile info rows ───────────────────────────────────────── */
+.profile-info-row {
+  display: flex;
+  gap: 12px;
+  padding: 6px 0;
+  border-bottom: 1px solid var(--border-light);
+  font-size: .92rem;
+}
+.profile-info-row:last-child { border-bottom: none; }
+.profile-info-label {
+  width: 100px;
+  flex-shrink: 0;
+  color: var(--text-muted);
+  font-weight: 600;
+}
+.profile-info-value { color: var(--text-primary); }

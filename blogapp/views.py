@@ -13,6 +13,7 @@ from .models import Blog, Post, Comment, Tag, PostFile, BlogFile
 from .forms import (
     RegistrationForm, LoginForm, BlogForm, PostForm,
     CommentForm, SearchForm, AddMemberForm,
+    AvatarForm, PasswordChangeForm,
     DEFAULT_SEARCH_SCOPES,
     SEARCH_IN_AUTHOR, SEARCH_IN_TITLE,
     SEARCH_IN_DESCRIPTION, SEARCH_IN_CONTENT, SEARCH_IN_COMMENTS,
@@ -449,7 +450,6 @@ def blog_delete_file(request, file_pk):
 # ─── Tags ─────────────────────────────────────────────────────────────────────
 
 @login_required
-@login_required
 def tag_posts(request, slug):
     tag = get_object_or_404(Tag, slug=slug)
     visible_blogs = get_visible_blogs(request.user)
@@ -467,21 +467,53 @@ def tag_posts(request, slug):
     })
 
 
+# ─── User list ────────────────────────────────────────────────────────────────
+
+@login_required
+def user_list(request):
+    users = User.objects.select_related('profile').order_by('username')
+    return render(request, 'blogapp/user_list.html', {'users': users})
+
+
 # ─── Profile ──────────────────────────────────────────────────────────────────
 
 @login_required
-@login_required
 def profile(request, username):
     profile_user = get_object_or_404(User, username=username)
-    visible_blogs = get_visible_blogs(request.user)
+    is_own = request.user == profile_user
+    # Ensure profile exists
+    from blogapp.models import UserProfile
+    profile_obj, _ = UserProfile.objects.get_or_create(user=profile_user)
 
-    user_blogs = Blog.objects.filter(owner=profile_user).filter(pk__in=visible_blogs)
-    user_posts = Post.objects.filter(
-        author=profile_user, blog__in=visible_blogs, is_published=True
-    ).select_related('blog')[:10]
+    avatar_form = None
+    password_form = None
+
+    if is_own:
+        if request.method == 'POST':
+            if 'change_avatar' in request.POST:
+                avatar_form = AvatarForm(request.POST, request.FILES, instance=profile_obj)
+                if avatar_form.is_valid():
+                    avatar_form.save()
+                    messages.success(request, 'Profile photo updated.')
+                    return redirect('profile', username=username)
+            elif 'change_password' in request.POST:
+                password_form = PasswordChangeForm(request.user, request.POST)
+                if password_form.is_valid():
+                    password_form.save()
+                    # Keep user logged in after password change
+                    from django.contrib.auth import update_session_auth_hash
+                    update_session_auth_hash(request, request.user)
+                    messages.success(request, 'Password changed successfully.')
+                    return redirect('profile', username=username)
+        if avatar_form is None:
+            avatar_form = AvatarForm(instance=profile_obj)
+        if password_form is None:
+            password_form = PasswordChangeForm(request.user)
 
     return render(request, 'blogapp/profile.html', {
         'profile_user': profile_user,
-        'user_blogs': user_blogs,
-        'user_posts': user_posts,
+        'profile_obj': profile_obj,
+        'is_own': is_own,
+        'avatar_form': avatar_form,
+        'password_form': password_form,
     })

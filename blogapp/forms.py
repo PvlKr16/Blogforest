@@ -241,3 +241,60 @@ class AddMemberForm(forms.Form):
             self.fields['user'].queryset = User.objects.exclude(
                 pk__in=list(existing)
             ).exclude(pk=blog.owner.pk)
+
+
+class AvatarForm(forms.ModelForm):
+    class Meta:
+        model = UserProfile
+        fields = ('avatar',)
+        widgets = {
+            'avatar': forms.FileInput(attrs={'class': 'form-control', 'accept': 'image/*'}),
+        }
+        labels = {'avatar': 'Profile photo'}
+
+    def clean_avatar(self):
+        avatar = self.cleaned_data.get('avatar')
+        if avatar and hasattr(avatar, 'size'):
+            if avatar.size > settings.MAX_IMAGE_SIZE:
+                raise forms.ValidationError(
+                    f'Image must not exceed {settings.MAX_IMAGE_SIZE // (1024 * 1024)} MB.'
+                )
+        return avatar
+
+
+class PasswordChangeForm(forms.Form):
+    current_password = forms.CharField(
+        label='Current password',
+        widget=forms.PasswordInput(attrs={'class': 'form-control password-field'})
+    )
+    new_password = forms.CharField(
+        label='New password',
+        widget=forms.PasswordInput(attrs={'class': 'form-control password-field'}),
+        min_length=8,
+    )
+    confirm_password = forms.CharField(
+        label='Confirm new password',
+        widget=forms.PasswordInput(attrs={'class': 'form-control password-field'})
+    )
+
+    def __init__(self, user, *args, **kwargs):
+        self.user = user
+        super().__init__(*args, **kwargs)
+
+    def clean_current_password(self):
+        pw = self.cleaned_data.get('current_password')
+        if not self.user.check_password(pw):
+            raise forms.ValidationError('Current password is incorrect.')
+        return pw
+
+    def clean(self):
+        cleaned = super().clean()
+        p1 = cleaned.get('new_password')
+        p2 = cleaned.get('confirm_password')
+        if p1 and p2 and p1 != p2:
+            raise forms.ValidationError('New passwords do not match.')
+        return cleaned
+
+    def save(self):
+        self.user.set_password(self.cleaned_data['new_password'])
+        self.user.save()

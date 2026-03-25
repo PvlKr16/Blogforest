@@ -5,70 +5,124 @@
 <div class="page-hero">
   <div class="container">
     <div class="flex items-center gap-3">
+      {% if profile_obj.avatar %}
+      <img src="{{ profile_obj.avatar.url }}" alt="{{ profile_user.username }}"
+           style="width:60px; height:60px; border-radius:50%; object-fit:cover; flex-shrink:0; border:3px solid rgba(255,255,255,.4);">
+      {% else %}
       <div class="avatar avatar-lg">{{ profile_user.username|first|upper }}</div>
+      {% endif %}
       <div>
         <h1>{{ profile_user.get_full_name|default:profile_user.username }}</h1>
-        <p>@{{ profile_user.username }} · С нами с {{ profile_user.date_joined|date:"M Y" }}</p>
+        <p>@{{ profile_user.username }}
+          {% if profile_obj.is_guest %}&nbsp;·&nbsp;guest{% endif %}
+          &nbsp;·&nbsp; since {{ profile_user.date_joined|date:"Y-m-d" }}
+        </p>
       </div>
     </div>
   </div>
 </div>
 
-<div class="container">
-  <div class="content-grid">
-    <!-- Posts -->
-    <div>
-      <h2 style="font-size:1.2rem; margin-bottom:16px;">Последние посты</h2>
-      {% for post in user_posts %}
-      <article class="card post-card">
-        <div class="card-body">
-          <div class="post-card-meta">
-            <span class="badge badge-stone">
-              <a href="{{ post.blog.get_absolute_url }}" style="color:inherit;">{{ post.blog.title }}</a>
-            </span>
-            <span class="text-muted text-sm">{{ post.created_at|date:"d M Y" }}</span>
+<div class="container content-full">
+  <div style="max-width:560px; margin:0 auto; display:flex; flex-direction:column; gap:20px;">
+
+    <!-- Contact info card -->
+    <div class="card">
+      <div class="card-body">
+        <h3 style="font-size:1rem; margin-bottom:16px;">Contact info</h3>
+
+        <div style="display:flex; flex-direction:column; gap:10px;">
+          <!-- Avatar -->
+          <div style="display:flex; align-items:center; gap:16px; padding-bottom:14px; border-bottom:1px solid var(--border-light);">
+            {% if profile_obj.avatar %}
+            <img src="{{ profile_obj.avatar.url }}" alt="{{ profile_user.username }}"
+                 style="width:80px; height:80px; border-radius:50%; object-fit:cover; border:2px solid var(--border-light);">
+            {% else %}
+            <div class="avatar" style="width:80px; height:80px; font-size:1.8rem;">
+              {{ profile_user.username|first|upper }}
+            </div>
+            {% endif %}
           </div>
-          <h3 class="post-card-title">
-            <a href="{{ post.get_absolute_url }}">{{ post.title }}</a>
-          </h3>
-          <p class="post-card-excerpt">{{ post.content|truncatewords:30 }}</p>
-        </div>
-      </article>
-      {% empty %}
-      <div class="card">
-        <div class="card-body" style="text-align:center; padding:36px;">
-          <p class="text-muted">Постов пока нет.</p>
+
+          <!-- Fields -->
+          <div class="profile-info-row">
+            <span class="profile-info-label">Last name</span>
+            <span class="profile-info-value">{{ profile_user.last_name|default:"—" }}</span>
+          </div>
+          <div class="profile-info-row">
+            <span class="profile-info-label">First name</span>
+            <span class="profile-info-value">{{ profile_user.first_name|default:"—" }}</span>
+          </div>
+          <div class="profile-info-row">
+            <span class="profile-info-label">Email</span>
+            <span class="profile-info-value">{{ profile_user.email|default:"—" }}</span>
+          </div>
+          <div class="profile-info-row">
+            <span class="profile-info-label">Role</span>
+            <span class="profile-info-value">
+              {% if profile_user.is_staff %}Admin{% elif profile_obj.is_guest %}Guest{% else %}User{% endif %}
+            </span>
+          </div>
         </div>
       </div>
-      {% endfor %}
     </div>
 
-    <!-- Sidebar -->
-    <aside class="sidebar">
-      <div class="sidebar-widget">
-        <div class="sidebar-widget-head">Author's topics</div>
-        <div class="sidebar-widget-body">
-          {% for blog in user_blogs %}
-          <div class="sidebar-blog-item">
-            <div class="sidebar-blog-cover">
-              {% if blog.cover %}<img src="{{ blog.cover.url }}" alt="">{% endif %}
-            </div>
-            <div>
-              <div class="sidebar-blog-name">
-                <a href="{{ blog.get_absolute_url }}">{{ blog.title }}</a>
-              </div>
-              <div class="sidebar-blog-sub">
-                {% if blog.is_public %}🌿 Public{% else %}🔒 Private{% endif %}
-                · {{ blog.posts.count }} постов
-              </div>
-            </div>
+    <!-- Edit forms — only for own profile -->
+    {% if is_own %}
+
+    <!-- Change avatar -->
+    <div class="card">
+      <div class="card-body">
+        <h3 style="font-size:1rem; margin-bottom:16px;">Change photo</h3>
+        <form method="post" enctype="multipart/form-data">
+          {% csrf_token %}
+          <div class="form-group">
+            {{ avatar_form.avatar }}
+            {% if avatar_form.avatar.errors %}
+            <ul class="errorlist">{% for e in avatar_form.avatar.errors %}<li>{{ e }}</li>{% endfor %}</ul>
+            {% endif %}
+            <div class="form-text">Max 5 MB. JPG, PNG, GIF, WebP.</div>
           </div>
-          {% empty %}
-          <p class="text-muted text-sm">No topics.</p>
-          {% endfor %}
-        </div>
+          <button type="submit" name="change_avatar" class="btn btn-primary btn-sm">Save photo</button>
+        </form>
       </div>
-    </aside>
+    </div>
+
+    <!-- Change password -->
+    <div class="card">
+      <div class="card-body">
+        <h3 style="font-size:1rem; margin-bottom:16px;">Change password</h3>
+        <form method="post">
+          {% csrf_token %}
+          {% for field in password_form %}
+          <div class="form-group">
+            <label class="form-label" for="{{ field.id_for_label }}">{{ field.label }}</label>
+            <div class="password-wrap">
+              {{ field }}
+              <button type="button" class="password-toggle" aria-label="Toggle password">
+                <svg class="eye-show" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>
+                </svg>
+                <svg class="eye-hide" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/>
+                  <path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/>
+                  <line x1="1" y1="1" x2="23" y2="23"/>
+                </svg>
+              </button>
+            </div>
+            {% if field.errors %}
+            <ul class="errorlist">{% for e in field.errors %}<li>{{ e }}</li>{% endfor %}</ul>
+            {% endif %}
+          </div>
+          {% endfor %}
+          {% if password_form.non_field_errors %}
+          <ul class="errorlist">{% for e in password_form.non_field_errors %}<li>{{ e }}</li>{% endfor %}</ul>
+          {% endif %}
+          <button type="submit" name="change_password" class="btn btn-primary btn-sm">Change password</button>
+        </form>
+      </div>
+    </div>
+
+    {% endif %}
   </div>
 </div>
 {% endblock %}
