@@ -110,31 +110,40 @@ def home(request):
         date_from = search_form.cleaned_data.get('date_from')
         date_to = search_form.cleaned_data.get('date_to')
 
-        # Search returns matching posts across visible blogs
-        posts_qs = Post.objects.filter(
-            blog__in=visible_blogs, is_published=True
-        ).select_related('author', 'blog').prefetch_related('tags')
+        # Search returns matching BLOGS (not posts), deduplicated, sorted by activity
+        blogs_qs = visible_blogs.annotate(
+            last_post_at=Max('posts__created_at')
+        ).select_related('owner')
 
         if query:
-            filters = Q()
+            blog_filters = Q()
+            post_filters = Q()
+
+            # Blog-level fields
             if SEARCH_IN_TITLE in active_scopes:
-                filters |= Q(title__icontains=query)
-            if SEARCH_IN_CONTENT in active_scopes:
-                filters |= Q(content__icontains=query)
+                blog_filters |= Q(title__icontains=query)
             if SEARCH_IN_DESCRIPTION in active_scopes:
-                filters |= Q(blog__description__icontains=query) | Q(blog__body__icontains=query)
+                blog_filters |= Q(description__icontains=query) | Q(body__icontains=query)
             if SEARCH_IN_AUTHOR in active_scopes:
-                filters |= Q(author__username__icontains=query)
+                blog_filters |= Q(owner__username__icontains=query)
+
+            # Post-level fields — match blogs that have relevant posts
+            if SEARCH_IN_CONTENT in active_scopes:
+                post_filters |= Q(posts__content__icontains=query)
             if SEARCH_IN_COMMENTS in active_scopes:
-                filters |= Q(comments__content__icontains=query)
-            posts_qs = posts_qs.filter(filters).distinct()
+                post_filters |= Q(posts__comments__content__icontains=query)
+
+            combined = blog_filters | post_filters
+            blogs_qs = blogs_qs.filter(combined).distinct()
 
         if date_from:
-            posts_qs = posts_qs.filter(created_at__date__gte=date_from)
+            blogs_qs = blogs_qs.filter(created_at__date__gte=date_from)
         if date_to:
-            posts_qs = posts_qs.filter(created_at__date__lte=date_to)
+            blogs_qs = blogs_qs.filter(created_at__date__lte=date_to)
 
-        paginator = Paginator(posts_qs, 10)
+        blogs_qs = blogs_qs.order_by('-last_post_at')
+
+        paginator = Paginator(blogs_qs, 10)
         page = request.GET.get('page')
         items = paginator.get_page(page)
         is_search = True

@@ -7,7 +7,7 @@
   <div class="container">
     {% if query %}
       <h1>Search: «{{ query }}»</h1>
-      <p>Posts found: {{ items.paginator.count }}</p>
+      <p>Topics found: {{ items.paginator.count }}</p>
     {% else %}
       <h1>Welcome to BlogForest</h1>
       <p>Read, write and share your stories</p>
@@ -22,37 +22,37 @@
     <div class="main-content">
 
       {% if is_search %}
-      <!-- ── Search results: post cards ── -->
+      <!-- ── Search results: topic cards (same layout as default, deduplicated) ── -->
       {% if items %}
-        {% for post in items %}
-        <article class="card post-card">
+        {% for blog in items %}
+        <article class="card topic-card">
           <div class="card-body">
-            <div class="post-card-meta">
-              <span class="badge {% if post.blog.is_public %}badge-green{% else %}badge-lock{% endif %}">
-                {% if post.blog.is_public %}🌿{% else %}🔒{% endif %}
-                <a href="{{ post.blog.get_absolute_url }}" style="color:inherit;">{{ post.blog.title }}</a>
-              </span>
-              <span class="text-muted text-sm">{{ post.created_at|date:"Y-m-d H:i" }}</span>
-            </div>
-            <h2 class="post-card-title">
-              <a href="{{ post.get_absolute_url }}">{{ post.title }}</a>
+            <h2 class="topic-card-title">
+              <span class="badge {% if blog.is_public %}badge-green{% else %}badge-lock{% endif %}"
+                    style="font-size:.7rem; vertical-align:middle; margin-right:6px;">
+                {% if blog.is_public %}🌿{% else %}🔒{% endif %}
+              </span><a href="{{ blog.get_absolute_url }}">{{ blog.title }}</a>
             </h2>
-            <p class="post-card-excerpt">{{ post.content|truncatewords:40 }}</p>
-            {% if post.tags.all %}
-            <div class="flex flex-wrap gap-2 mt-3">
-              {% for tag in post.tags.all %}
-              <a href="{% url 'tag_posts' tag.slug %}" class="tag-pill">{{ tag.name }}</a>
-              {% endfor %}
+            <div class="topic-card-meta">
+              <span class="text-muted text-sm">{{ blog.created_at|date:"Y-m-d H:i" }}</span>
+              <span class="text-muted text-sm">
+                <a href="{% url 'profile' blog.owner.username %}" style="color:var(--text-muted);">
+                  {{ blog.owner.username }}
+                </a>
+              </span>
             </div>
+            {% if blog.description %}
+            <p class="topic-card-description">{{ blog.description }}</p>
+            {% endif %}
+            {% if blog.body %}
+            <p class="topic-card-body">{{ blog.body }}</p>
             {% endif %}
           </div>
           <div class="card-footer">
             <div class="flex items-center gap-2">
-              <div class="avatar" style="width:24px;height:24px;font-size:.7rem;">
-                {{ post.author.username|first|upper }}
-              </div>
-              <a href="{% url 'profile' post.author.username %}" class="text-sm">{{ post.author.username }}</a>
-              <span class="text-muted text-sm" style="margin-left:auto;">💬 {{ post.comments.count }}</span>
+              <span class="text-muted text-sm" style="margin-left:auto;">
+                💬 {{ blog.posts.count }}
+              </span>
             </div>
           </div>
         </article>
@@ -90,14 +90,14 @@
             </div>
 
             <!-- Description — one line -->
-<!--            {% if blog.description %}-->
-<!--            <p class="topic-card-description">{{ blog.description }}</p>-->
-<!--            {% endif %}-->
+            {% if blog.description %}
+            <p class="topic-card-description">{{ blog.description }}</p>
+            {% endif %}
 
-<!--            &lt;!&ndash; Body — three lines &ndash;&gt;-->
-<!--            {% if blog.body %}-->
-<!--            <p class="topic-card-body">{{ blog.body }}</p>-->
-<!--            {% endif %}-->
+            <!-- Body — three lines -->
+            {% if blog.body %}
+            <p class="topic-card-body">{{ blog.body }}</p>
+            {% endif %}
 
           </div>
           <div class="card-footer">
@@ -159,6 +159,7 @@
           {% empty %}
           <p class="text-muted text-sm">No topics yet.</p>
           {% endfor %}
+          <a href="{% url 'blog_create' %}" class="btn btn-outline btn-sm w-full mt-3">+ New topic</a>
         </div>
       </div>
       {% endif %}
