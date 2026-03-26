@@ -49,6 +49,8 @@ TEMPLATES = [
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
                 'blogapp.context_processors.search_scopes',
+                'blogapp.context_processors.unread_count',
+                'blogapp.context_processors.unread_count',
             ],
         },
     },
@@ -96,4 +98,4 @@ CRISPY_TEMPLATE_PACK = 'bootstrap5'
 
 LOGIN_URL = '/login/'
 LOGIN_REDIRECT_URL = '/'
-LOGOUT_REDIRECT_URL = '/'
+LOGOUT_REDIRECT_URL = '/login/'

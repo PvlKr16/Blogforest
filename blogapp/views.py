@@ -9,7 +9,7 @@ from django.http import Http404, JsonResponse
 from django.core.paginator import Paginator
 from django.views.decorators.http import require_POST
 
-from .models import Blog, Post, Comment, Tag, PostFile, BlogFile
+from .models import Blog, Post, Comment, Tag, PostFile, BlogFile, BlogRead, get_unread_blogs
 from .forms import (
     RegistrationForm, LoginForm, BlogForm, PostForm,
     CommentForm, SearchForm, AddMemberForm,
@@ -193,6 +193,14 @@ def blog_detail(request, pk):
     is_guest = getattr(getattr(request.user, 'profile', None), 'is_guest', False)
     if is_guest and not blog.is_member(request.user):
         raise Http404
+
+    # Mark as read immediately when the topic is opened
+    if request.user.is_authenticated:
+        from django.utils import timezone
+        BlogRead.objects.update_or_create(
+            user=request.user, blog=blog,
+            defaults={'last_read_at': timezone.now()}
+        )
 
     # Sort order: 'asc' = oldest first (default), 'desc' = newest first
     sort = request.GET.get('sort', 'asc')
@@ -447,6 +455,28 @@ def blog_delete_file(request, file_pk):
     return redirect('blog_edit', pk=blog.pk)
 
 
+# ─── Unread ───────────────────────────────────────────────────────────────────
+
+@login_required
+def unread_view(request):
+    sort = request.GET.get('sort', 'activity')
+    from django.db.models import Max
+
+    blogs = get_unread_blogs(request.user)
+
+    if sort == 'activity':
+        # Sort by latest post date descending
+        blogs = blogs.order_by('-last_post_at')
+    else:
+        # Sort by blog creation date descending
+        blogs = blogs.order_by('-created_at')
+
+    return render(request, 'blogapp/unread.html', {
+        'blogs': blogs,
+        'sort': sort,
+    })
+
+
 # ─── Tags ─────────────────────────────────────────────────────────────────────
 
 @login_required
@@ -464,6 +494,59 @@ def tag_posts(request, slug):
 
     return render(request, 'blogapp/tag_posts.html', {
         'tag': tag, 'posts': posts_page
+    })
+
+
+# ─── Unread topics ────────────────────────────────────────────────────────────
+
+def get_unread_count(user):
+    """Return number of member topics with new posts since the user last visited."""
+    if not user.is_authenticated:
+        return 0
+    from django.db.models import Max, Subquery, OuterRef
+    member_blogs = Blog.objects.filter(
+        Q(owner=user) | Q(members=user)
+    ).distinct()
+    last_read_sq = BlogRead.objects.filter(
+        user=user, blog=OuterRef('pk')
+    ).values('last_read_at')[:1]
+    blogs = member_blogs.annotate(
+        last_read_at=Subquery(last_read_sq),
+        last_post_at=Max('posts__created_at'),
+    )
+    count = 0
+    for b in blogs:
+        if b.last_post_at is None:
+            continue
+        if b.last_read_at is None or b.last_post_at > b.last_read_at:
+            count += 1
+    return count
+
+
+@login_required
+def unread_blogs(request):
+    from django.db.models import Max, Subquery, OuterRef
+    member_blogs = Blog.objects.filter(
+        Q(owner=request.user) | Q(members=request.user)
+    ).distinct()
+    last_read_sq = BlogRead.objects.filter(
+        user=request.user, blog=OuterRef('pk')
+    ).values('last_read_at')[:1]
+    blogs = member_blogs.annotate(
+        last_read_at=Subquery(last_read_sq),
+        last_post_at=Max('posts__created_at'),
+    ).select_related('owner')
+    unread = [
+        b for b in blogs
+        if b.last_post_at is not None and (
+            b.last_read_at is None or b.last_post_at > b.last_read_at
+        )
+    ]
+    sort = request.GET.get('sort', 'desc')
+    unread.sort(key=lambda b: b.last_post_at or b.created_at, reverse=(sort == 'desc'))
+    return render(request, 'blogapp/unread.html', {
+        'unread_blogs': unread,
+        'sort': sort,
     })
 
 

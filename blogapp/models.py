@@ -22,7 +22,6 @@ class UserProfile(models.Model):
     def __str__(self):
         return f'{self.user.username} ({"guest" if self.is_guest else "regular"})'
 
-
 class Tag(models.Model):
     name = models.CharField(max_length=50, unique=True)
     slug = models.SlugField(max_length=50, unique=True)
@@ -199,3 +198,62 @@ class Comment(models.Model):
 
     def __str__(self):
         return f'Comment by {self.author.username} on "{self.post.title}"'
+
+
+class BlogRead(models.Model):
+    """
+    Tracks when a user last read a blog.
+    Used to determine unread topics: blogs where new posts appeared after last_read_at.
+    """
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='blog_reads')
+    blog = models.ForeignKey(Blog, on_delete=models.CASCADE, related_name='reads')
+    last_read_at = models.DateTimeField()
+
+    class Meta:
+        verbose_name = 'Blog read'
+        verbose_name_plural = 'Blog reads'
+        unique_together = ('user', 'blog')
+
+    def __str__(self):
+        return f'{self.user.username} read "{self.blog.title}" at {self.last_read_at}'
+
+
+def get_unread_blogs(user):
+    """
+    Return queryset of blogs that are 'unread' for the given user:
+    - User is a member (or owner) of the blog
+    - AND (never read OR new posts appeared after last_read_at)
+    """
+    from django.db.models import Max, OuterRef, Subquery
+    from django.utils import timezone
+
+    if not user.is_authenticated:
+        return Blog.objects.none()
+
+    member_blogs = Blog.objects.filter(
+        models.Q(owner=user) | models.Q(members=user)
+    ).distinct()
+
+    # Subquery: last post date for each blog
+    last_post_sq = Post.objects.filter(
+        blog=OuterRef('pk'), is_published=True
+    ).order_by('-created_at').values('created_at')[:1]
+
+    # Subquery: user's last_read_at for each blog
+    last_read_sq = BlogRead.objects.filter(
+        user=user, blog=OuterRef('pk')
+    ).values('last_read_at')[:1]
+
+    blogs = member_blogs.annotate(
+        last_post_at=Subquery(last_post_sq),
+        last_read_at=Subquery(last_read_sq),
+    ).filter(
+        # Has at least one post
+        last_post_at__isnull=False
+    ).filter(
+        # Never read OR new posts since last read
+        models.Q(last_read_at__isnull=True) |
+        models.Q(last_post_at__gt=models.F('last_read_at'))
+    )
+
+    return blogs

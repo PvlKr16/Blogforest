@@ -1129,3 +1129,82 @@ textarea.form-control { resize: vertical; min-height: 100px; }
   font-weight: 600;
 }
 .profile-info-value { color: var(--text-primary); }
+
+/* ── Notification scroll icon ────────────────────────────────── */
+.nav-scroll-btn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 5px;
+  border-radius: var(--radius-sm);
+  color: rgba(255,255,255,.8);
+  transition: background .18s, color .18s;
+  text-decoration: none;
+}
+.nav-scroll-btn:hover {
+  background: rgba(255,255,255,.12);
+  color: #fff;
+}
+.nav-scroll-badge {
+  position: absolute;
+  top: -2px;
+  right: -4px;
+  min-width: 16px;
+  height: 16px;
+  padding: 0 4px;
+  background: #e74c3c;
+  color: #fff;
+  font-size: .65rem;
+  font-weight: 700;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+  font-family: var(--font-body);
+}
+
+/* ── Unread topic cards ──────────────────────────────────────── */
+.unread-card {
+  display: block;
+  padding: 16px 20px;
+  margin-bottom: 10px;
+  background: var(--surface-card);
+  border: 1.5px solid var(--border-light);
+  border-radius: var(--radius-md);
+  text-decoration: none;
+  color: inherit;
+  transition: box-shadow .18s, border-color .18s, transform .18s;
+}
+.unread-card:hover {
+  box-shadow: var(--shadow-md);
+  border-color: var(--green-pale);
+  transform: translateY(-1px);
+  color: inherit;
+}
+.unread-card-title {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 1.05rem;
+  color: var(--text-primary);
+  margin-bottom: 5px;
+}
+.unread-card-meta {
+  display: flex;
+  justify-content: space-between;
+  font-size: .8rem;
+  color: var(--text-muted);
+  margin-bottom: 6px;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+.unread-card-desc {
+  font-size: .88rem;
+  color: var(--text-secondary);
+  display: -webkit-box;
+  -webkit-line-clamp: 1;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  margin: 0;
+}

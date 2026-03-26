@@ -28,10 +28,16 @@ urlpatterns = [
     path('files/<int:file_pk>/delete/', views.delete_file, name='delete_file'),
     path('blog-files/<int:file_pk>/delete/', views.blog_delete_file, name='blog_delete_file'),
 
+    # Unread
+
+    # Unread
+
+    path('unread/', views.unread_blogs, name='unread_blogs'),
+
     # Tags
     path('tag/<slug:slug>/', views.tag_posts, name='tag_posts'),
 
-    # Users
+    # Users & notifications
     path('users/', views.user_list, name='user_list'),
     path('user/<str:username>/', views.profile, name='profile'),
 ]

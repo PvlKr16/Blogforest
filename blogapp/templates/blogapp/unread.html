@@ -1,0 +1,60 @@
+{% extends 'blogapp/base.html' %}
+{% block title %}Unread topics — BlogForest{% endblock %}
+
+{% block content %}
+<div class="page-hero">
+  <div class="container">
+    <h1>Unread topics</h1>
+    <p>{{ unread_blogs|length }} topic{{ unread_blogs|length|pluralize }} with new activity</p>
+  </div>
+</div>
+
+<div class="container content-full">
+  <div style="max-width:720px;">
+
+    <!-- Sort controls -->
+    <div style="display:flex; justify-content:flex-end; margin-bottom:20px;">
+      <div style="display:flex; border:1.5px solid var(--border); border-radius:var(--radius-sm); overflow:hidden;">
+        <a href="?sort=desc" class="sort-btn {% if sort == 'desc' %}sort-btn-active{% endif %}">↓ Newest first</a>
+        <a href="?sort=asc"  class="sort-btn {% if sort == 'asc'  %}sort-btn-active{% endif %}">↑ Oldest first</a>
+      </div>
+    </div>
+
+    {% if unread_blogs %}
+      {% for blog in unread_blogs %}
+      <a href="{{ blog.get_absolute_url }}" class="unread-card">
+        <div class="unread-card-title">
+          <span class="badge {% if blog.is_public %}badge-green{% else %}badge-lock{% endif %}"
+                style="font-size:.7rem; margin-right:6px;">
+            {% if blog.is_public %}🌿{% else %}🔒{% endif %}
+          </span>
+          {{ blog.title }}
+        </div>
+        <div class="unread-card-meta">
+          <span>by {{ blog.owner.username }}</span>
+          <span>
+            {% if blog.last_post_at %}
+              last activity {{ blog.last_post_at|date:"Y-m-d H:i" }}
+            {% else %}
+              created {{ blog.created_at|date:"Y-m-d H:i" }}
+            {% endif %}
+          </span>
+        </div>
+        {% if blog.description %}
+        <p class="unread-card-desc">{{ blog.description }}</p>
+        {% endif %}
+      </a>
+      {% endfor %}
+    {% else %}
+      <div class="card">
+        <div class="card-body" style="text-align:center; padding:48px 20px;">
+          <div style="font-size:3rem; margin-bottom:12px;">📜</div>
+          <h3>All caught up!</h3>
+          <p class="text-muted mt-3">No unread topics at the moment.</p>
+        </div>
+      </div>
+    {% endif %}
+
+  </div>
+</div>
+{% endblock %}
