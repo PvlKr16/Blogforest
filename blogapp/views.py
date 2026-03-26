@@ -9,7 +9,7 @@ from django.http import Http404, JsonResponse
 from django.core.paginator import Paginator
 from django.views.decorators.http import require_POST
 
-from .models import Blog, Post, Comment, Tag, PostFile, BlogFile, BlogRead, get_unread_blogs
+from .models import Blog, Post, Comment, Tag, PostFile, BlogFile, BlogRead
 from .forms import (
     RegistrationForm, LoginForm, BlogForm, PostForm,
     CommentForm, SearchForm, AddMemberForm,
@@ -194,7 +194,7 @@ def blog_detail(request, pk):
     if is_guest and not blog.is_member(request.user):
         raise Http404
 
-    # Mark as read immediately when the topic is opened
+    # Mark as read when the topic is opened
     if request.user.is_authenticated:
         from django.utils import timezone
         BlogRead.objects.update_or_create(
@@ -247,6 +247,12 @@ def blog_create(request):
                     messages.warning(request, f'File "{f.name}" skipped: exceeds the 5 MB limit.')
                     continue
                 BlogFile.objects.create(blog=blog, file=f, original_name=f.name, size=f.size)
+            # Mark the new topic as read for its creator immediately
+            from django.utils import timezone
+            BlogRead.objects.update_or_create(
+                user=request.user, blog=blog,
+                defaults={'last_read_at': timezone.now()}
+            )
             messages.success(request, 'Topic created successfully!')
             return redirect('blog_detail', pk=blog.pk)
     else:
@@ -287,7 +293,7 @@ def blog_delete(request, pk):
     if request.method == 'POST':
         blog.delete()
         messages.success(request, 'Topic deleted.')
-        return redirect('blog_list')
+        return redirect('home')
     return render(request, 'blogapp/blog/delete_confirm.html', {'blog': blog})
 
 
@@ -318,7 +324,7 @@ def blog_leave(request, pk):
         return redirect('blog_detail', pk=blog.pk)
     blog.members.remove(request.user)
     messages.success(request, f'You have left the blog "{blog.title}".')
-    return redirect('blog_list')
+    return redirect('home')
 
 
 @login_required
@@ -369,6 +375,14 @@ def post_create(request, blog_pk):
                     size=f.size
                 )
 
+            # Mark blog as read for the author at the post's timestamp
+            # so the author's own new post doesn't appear as unread for them,
+            # but does appear as unread for all other members
+            from django.utils import timezone
+            BlogRead.objects.update_or_create(
+                user=request.user, blog=blog,
+                defaults={'last_read_at': post.created_at}
+            )
             messages.success(request, 'Comment added!')
             return redirect('blog_detail', pk=blog.pk)
     else:
@@ -516,9 +530,11 @@ def get_unread_count(user):
     )
     count = 0
     for b in blogs:
-        if b.last_post_at is None:
-            continue
-        if b.last_read_at is None or b.last_post_at > b.last_read_at:
+        # Never visited → always unread (even if no posts yet)
+        if b.last_read_at is None:
+            count += 1
+        # Visited but new posts appeared since last visit
+        elif b.last_post_at is not None and b.last_post_at > b.last_read_at:
             count += 1
     return count
 
@@ -538,8 +554,8 @@ def unread_blogs(request):
     ).select_related('owner')
     unread = [
         b for b in blogs
-        if b.last_post_at is not None and (
-            b.last_read_at is None or b.last_post_at > b.last_read_at
+        if b.last_read_at is None or (
+            b.last_post_at is not None and b.last_post_at > b.last_read_at
         )
     ]
     sort = request.GET.get('sort', 'desc')
