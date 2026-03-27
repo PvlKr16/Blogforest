@@ -950,6 +950,21 @@ textarea.form-control { resize: vertical; min-height: 100px; }
     text-align: center;
     padding: 9px 20px;
   }
+
+  /* Hero — compact on mobile */
+  .page-hero {
+    padding: 22px 0 18px;
+  }
+  .page-hero h1 { margin-bottom: 4px; }
+
+  /* Scroll-badge icon — visible in header on mobile, hide the one inside burger menu */
+  .nav-scroll-btn.nav-scroll-btn-mobile {
+    display: inline-flex;
+    flex-shrink: 0;
+  }
+  .header-nav .nav-scroll-btn {
+    display: none;
+  }
 }
 
 @media (max-width: 420px) {
@@ -1131,6 +1146,10 @@ textarea.form-control { resize: vertical; min-height: 100px; }
 .profile-info-value { color: var(--text-primary); }
 
 /* ── Notification scroll icon ────────────────────────────────── */
+@media (min-width: 681px) {
+  .nav-scroll-btn.nav-scroll-btn-mobile { display: none; }
+}
+
 .nav-scroll-btn {
   position: relative;
   display: inline-flex;
