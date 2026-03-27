@@ -874,6 +874,13 @@ textarea.form-control { resize: vertical; min-height: 100px; }
 .mb-0       { margin-bottom: 0; }
 .w-full     { width: 100%; }
 
+/* ── Members mobile block ────────────────────────────────────── */
+.members-mobile { display: none; }
+
+@media (max-width: 900px) {
+  .members-mobile { display: block; margin-top: 28px; }
+}
+
 /* ── Responsive ──────────────────────────────────────────────── */
 @media (max-width: 900px) {
   .content-grid {

@@ -261,5 +261,79 @@
 
     </aside>
   </div>
+
+  <!-- Members (mobile — below posts) -->
+  <div class="members-mobile">
+    <div class="sidebar-widget">
+      <div class="sidebar-widget-head">Members ({{ members.count }})</div>
+      <div class="sidebar-widget-body">
+        <!-- Owner -->
+        <div class="member-row" style="margin-bottom:8px;">
+          <div class="avatar">{{ blog.owner.username|first|upper }}</div>
+          <div class="member-name">
+            <a href="{% url 'profile' blog.owner.username %}">{{ blog.owner.username }}</a>
+            {% if blog.owner.profile.is_guest %}<span class="text-muted text-sm">(guest)</span>{% endif %}
+          </div>
+          <span class="badge badge-green" style="font-size:.7rem;">Owner</span>
+        </div>
+        <!-- Members list -->
+        <div class="members-list">
+          {% for member in members %}
+          <div class="member-row">
+            <div class="avatar">{{ member.username|first|upper }}</div>
+            <div class="member-name">
+              <a href="{% url 'profile' member.username %}">{{ member.username }}</a>
+              {% if member.profile.is_guest %}<span class="text-muted text-sm">(guest)</span>{% endif %}
+            </div>
+            {% if user == member %}
+            <form method="post" action="{% url 'blog_remove_member' blog.pk member.pk %}" style="margin:0;">
+              {% csrf_token %}
+              <button type="submit" class="btn btn-ghost btn-sm"
+                      style="padding:2px 7px; font-size:.75rem; color:#c0392b; border-color:#f5c2c0;"
+                      title="Leave topic"
+                      onclick="return confirm('Leave this topic?')">✕</button>
+            </form>
+            {% endif %}
+          </div>
+          {% empty %}
+          <p class="text-muted text-sm">No members.</p>
+          {% endfor %}
+        </div>
+        <!-- Add member -->
+        {% if user.is_authenticated %}
+        <hr class="divider" style="margin:14px 0;">
+        <p class="text-sm" style="font-weight:600; margin-bottom:8px; color:var(--text-secondary);">Add member</p>
+        <form method="post" action="{% url 'blog_add_member' blog.pk %}">
+          {% csrf_token %}
+          {{ add_member_form.user }}
+          <button type="submit" class="btn btn-outline btn-sm w-full mt-3">Add</button>
+        </form>
+        {% endif %}
+      </div>
+    </div>
+    {% if is_member and not is_owner %}
+    <div class="sidebar-widget" style="margin-top:12px;">
+      <div class="sidebar-widget-body">
+        <form method="post" action="{% url 'blog_leave' blog.pk %}"
+              onsubmit="return confirm('Leave topic \u00ab{{ blog.title }}\u00bb?')">
+          {% csrf_token %}
+          <button type="submit" class="btn btn-ghost btn-sm w-full" style="color:#c0392b; border-color:#f5c2c0;">
+            Leave topic
+          </button>
+        </form>
+      </div>
+    </div>
+    {% endif %}
+    {% if user.is_staff %}
+    <div class="sidebar-widget" style="margin-top:12px;">
+      <div class="sidebar-widget-head">Manage</div>
+      <div class="sidebar-widget-body" style="display:flex; flex-direction:column; gap:8px;">
+        <a href="{% url 'blog_edit' blog.pk %}" class="btn btn-outline btn-sm">✏️ Edit topic</a>
+        <a href="{% url 'blog_delete' blog.pk %}" class="btn btn-ghost btn-sm" style="color:#c0392b; border-color:#f5c2c0;">🗑 Delete topic</a>
+      </div>
+    </div>
+    {% endif %}
+  </div>
+
 </div>
 {% endblock %}
