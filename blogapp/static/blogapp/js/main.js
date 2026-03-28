@@ -69,4 +69,90 @@ document.addEventListener('DOMContentLoaded', function () {
     });
   });
 
+
+  // ── Drag & Drop file zones ────────────────────────────────────
+  const MAX_FILE_MB = 5;
+  const MAX_BYTES = MAX_FILE_MB * 1024 * 1024;
+
+  function formatBytes(bytes) {
+    if (bytes < 1024) return bytes + ' B';
+    if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+    return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+  }
+
+  function initDropzone(dropzoneEl, listEl) {
+    if (!dropzoneEl || !listEl) return;
+    const input = dropzoneEl.querySelector('.dropzone-input');
+    if (!input) return;
+
+    // Track selected files (DataTransfer trick for merging picks)
+    let selectedFiles = [];
+
+    function syncInputFiles() {
+      const dt = new DataTransfer();
+      selectedFiles.forEach(f => dt.items.add(f));
+      input.files = dt.files;
+    }
+
+    function renderList() {
+      listEl.innerHTML = '';
+      selectedFiles.forEach((file, idx) => {
+        const overLimit = file.size > MAX_BYTES;
+        const item = document.createElement('div');
+        item.className = 'dropzone-file-item';
+        item.innerHTML =
+          '<span>📄</span>' +
+          '<span class="dropzone-file-item-name" title="' + file.name + '">' + file.name + '</span>' +
+          '<span class="dropzone-file-item-size">' + formatBytes(file.size) + '</span>' +
+          (overLimit ? '<span class="dropzone-file-item-err">⚠ too large</span>' : '') +
+          '<button type="button" class="dropzone-file-item-remove" data-idx="' + idx + '" title="Remove">✕</button>';
+        listEl.appendChild(item);
+      });
+
+      listEl.querySelectorAll('.dropzone-file-item-remove').forEach(btn => {
+        btn.addEventListener('click', function () {
+          selectedFiles.splice(parseInt(this.dataset.idx), 1);
+          syncInputFiles();
+          renderList();
+        });
+      });
+    }
+
+    function addFiles(fileList) {
+      const incoming = Array.from(fileList);
+      // Merge — avoid duplicates by name+size
+      incoming.forEach(f => {
+        const dup = selectedFiles.some(s => s.name === f.name && s.size === f.size);
+        if (!dup) selectedFiles.push(f);
+      });
+      syncInputFiles();
+      renderList();
+    }
+
+    // Click opens file picker (input already covers the zone with opacity:0)
+    input.addEventListener('change', function () {
+      addFiles(this.files);
+      // Reset input so same file can be re-added after removal
+      this.value = '';
+    });
+
+    // Drag events
+    dropzoneEl.addEventListener('dragenter', e => { e.preventDefault(); dropzoneEl.classList.add('drag-over'); });
+    dropzoneEl.addEventListener('dragover',  e => { e.preventDefault(); dropzoneEl.classList.add('drag-over'); });
+    dropzoneEl.addEventListener('dragleave', e => {
+      if (!dropzoneEl.contains(e.relatedTarget)) dropzoneEl.classList.remove('drag-over');
+    });
+    dropzoneEl.addEventListener('drop', function (e) {
+      e.preventDefault();
+      dropzoneEl.classList.remove('drag-over');
+      if (e.dataTransfer.files.length) addFiles(e.dataTransfer.files);
+    });
+  }
+
+  document.querySelectorAll('.dropzone').forEach(function (dz) {
+    const listId = dz.id + '-list';
+    const list = document.getElementById(listId);
+    initDropzone(dz, list);
+  });
+
 });
