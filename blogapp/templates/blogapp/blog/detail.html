@@ -195,19 +195,6 @@
         </div>
       </div>
       {% endif %}
-      {% if is_member and not is_owner %}
-      <div class="sidebar-widget">
-        <div class="sidebar-widget-body">
-          <form method="post" action="{% url 'blog_leave' blog.pk %}"
-                onsubmit="return confirm('Leave topic «{{ blog.title }}»?')">
-            {% csrf_token %}
-            <button type="submit" class="btn btn-ghost btn-sm w-full" style="color:#c0392b; border-color:#f5c2c0;">
-              Leave topic
-            </button>
-          </form>
-        </div>
-      </div>
-      {% endif %}
 
       <!-- Members -->
       <div class="sidebar-widget">
@@ -311,19 +298,6 @@
         {% endif %}
       </div>
     </div>
-    {% if is_member and not is_owner %}
-    <div class="sidebar-widget" style="margin-top:12px;">
-      <div class="sidebar-widget-body">
-        <form method="post" action="{% url 'blog_leave' blog.pk %}"
-              onsubmit="return confirm('Leave topic \u00ab{{ blog.title }}\u00bb?')">
-          {% csrf_token %}
-          <button type="submit" class="btn btn-ghost btn-sm w-full" style="color:#c0392b; border-color:#f5c2c0;">
-            Leave topic
-          </button>
-        </form>
-      </div>
-    </div>
-    {% endif %}
     {% if user.is_staff %}
     <div class="sidebar-widget" style="margin-top:12px;">
       <div class="sidebar-widget-head">Manage</div>
