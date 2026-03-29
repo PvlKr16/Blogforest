@@ -5,12 +5,11 @@
 <div class="page-hero">
   <div class="container">
     <h1>{{ action }}</h1>
-    <p>Topic: <a href="{{ blog.get_absolute_url }}" style="color:rgba(255,255,255,.85);">{{ blog.title }}</a></p>
   </div>
 </div>
 
 <div class="container content-full">
-  <div style="max-width:800px; margin:0 auto;">
+  <div style="max-width:720px; margin:0 auto;">
     <div class="card">
       <div class="card-body">
         <form method="post" enctype="multipart/form-data" novalidate>
@@ -23,53 +22,90 @@
           </div>
 
           <div class="form-group">
-            <label class="form-label" for="{{ form.content.id_for_label }}">{{ form.content.label }}</label>
-            {{ form.content }}
-            {% if form.content.errors %}<ul class="errorlist">{% for e in form.content.errors %}<li>{{ e }}</li>{% endfor %}</ul>{% endif %}
+            <label class="form-label" for="{{ form.description.id_for_label }}">{{ form.description.label }}</label>
+            <textarea name="description" id="{{ form.description.id_for_label }}"
+                      class="form-control" rows="2"
+                      placeholder="Short description">{{ form.description.value|default:'' }}</textarea>
+            <div class="form-text">Shown in topic cards and search results.</div>
+            {% if form.description.errors %}<ul class="errorlist">{% for e in form.description.errors %}<li>{{ e }}</li>{% endfor %}</ul>{% endif %}
           </div>
 
           <div class="form-group">
-            <label class="form-label" for="{{ form.tags_input.id_for_label }}">{{ form.tags_input.label }}</label>
-            {{ form.tags_input }}
-            <div class="form-text">Example: travel, photography, life</div>
+            <label class="form-label" for="{{ form.body.id_for_label }}">{{ form.body.label }}</label>
+            {{ form.body }}
+            <div class="form-text">Full content — shown on the topic page. No size limit.</div>
+            {% if form.body.errors %}<ul class="errorlist">{% for e in form.body.errors %}<li>{{ e }}</li>{% endfor %}</ul>{% endif %}
           </div>
 
           <!-- File attachments -->
           <div class="form-group">
             <label class="form-label">Attachments</label>
-            {% if post %}
-            {% with files=post.files.all %}
-            {% if files %}
-            <div class="files-list" style="margin-bottom:12px;">
-              {% for pf in files %}
-              <div class="file-item">
-                <span class="file-item-icon">📎</span>
-                <span class="file-item-name">{{ pf.original_name }}</span>
-                <span class="file-item-size">{{ pf.size_display }}</span>
-                <form method="post" action="{% url 'delete_file' pf.pk %}" style="margin:0;">
-                  {% csrf_token %}
-                  <button type="submit" class="btn btn-ghost btn-sm"
-                          style="padding:2px 7px; color:#c0392b; border-color:#f5c2c0;"
-                          onclick="return confirm('Delete file?')">✕</button>
-                </form>
+            {% if blog %}
+              {% with files=blog.files.all %}
+              {% if files %}
+              <div class="files-list" style="margin-bottom:12px;">
+                {% for bf in files %}
+                <div class="file-item">
+                  <span class="file-item-icon">📎</span>
+                  <span class="file-item-name">{{ bf.original_name }}</span>
+                  <span class="file-item-size">{{ bf.size_display }}</span>
+                  <form method="post" action="{% url 'blog_delete_file' bf.pk %}" style="margin:0;">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-ghost btn-sm"
+                            style="padding:2px 7px; color:#c0392b; border-color:#f5c2c0;"
+                            onclick="return confirm('Delete file?')">✕</button>
+                  </form>
+                </div>
+                {% endfor %}
               </div>
-              {% endfor %}
-            </div>
+              {% endif %}
+              {% endwith %}
             {% endif %}
-            {% endwith %}
-            {% endif %}
-            <div class="dropzone" id="dropzone-post">
+            <!-- Desktop: drag & drop zone -->
+            <div class="dropzone dropzone-desktop" id="dropzone-blog">
               <div class="dropzone-icon">📎</div>
               <div class="dropzone-text">Drag files here or <span class="dropzone-link">click to choose</span></div>
               <div class="dropzone-hint">Any file type · Max 5 MB per file · Multiple files allowed</div>
-              <input type="file" name="post_files" id="post_files" class="dropzone-input" multiple>
+              <input type="file" name="blog_files" id="blog_files" class="dropzone-input" multiple>
             </div>
-            <div class="dropzone-file-list" id="dropzone-post-list"></div>
+            <div class="dropzone-file-list dropzone-desktop" id="dropzone-blog-list"></div>
+            <!-- Mobile: plain file input -->
+            <input type="file" name="blog_files" class="form-control dropzone-mobile" multiple>
+            <div class="form-text dropzone-mobile">Any file type · Max 5 MB per file · Multiple files allowed</div>
+          </div>
+
+          <div class="form-group">
+            <div class="form-check">
+              {{ form.is_public }}
+              <label for="{{ form.is_public.id_for_label }}" class="form-label mb-0" style="cursor:pointer;">
+                {{ form.is_public.label }}
+              </label>
+            </div>
+            <div class="form-text">Public topics are visible to everyone. Private — members only.</div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">{{ form.members.label }}</label>
+            <div class="member-checkbox-list">
+              {% for choice in form.members %}
+              <label>
+                {{ choice.tag }}
+                {{ choice.choice_label }}
+              </label>
+              {% empty %}
+              <p class="text-muted text-sm">No other users.</p>
+              {% endfor %}
+            </div>
+            <div class="form-text">Selected users will be able to read and post in this topic.</div>
           </div>
 
           <div style="display:flex; gap:12px; flex-wrap:wrap; margin-top:8px;">
             <button type="submit" class="btn btn-primary btn-lg">{{ action }}</button>
+            {% if blog %}
             <a href="{{ blog.get_absolute_url }}" class="btn btn-ghost btn-lg">Cancel</a>
+            {% else %}
+            <a href="{% url 'home' %}" class="btn btn-ghost btn-lg">Cancel</a>
+            {% endif %}
           </div>
         </form>
       </div>

@@ -13,7 +13,7 @@ DEBUG = os.getenv('DEBUG', 'True') == 'True'
 
 ALLOWED_HOSTS = os.getenv(
     'ALLOWED_HOSTS',
-    'localhost 127.0.0.1 192.168.0.201'
+    'localhost 127.0.0.1 192.168.0.201 192.168.0.202'
 ).split()
 
 INSTALLED_APPS = [

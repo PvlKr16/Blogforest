@@ -1278,9 +1278,10 @@ textarea.form-control { resize: vertical; min-height: 100px; }
 }
 .dropzone-file-item-remove:hover { color: #c0392b; }
 
-/* On mobile — show plain file input instead of fancy dropzone */
+/* Dropzone visibility: desktop-only for drag&drop, mobile gets plain input */
+.dropzone-mobile { display: none; }
+
 @media (max-width: 680px) {
-  .dropzone { padding: 14px 12px; }
-  .dropzone-icon { display: none; }
-  .dropzone-text { font-size: .85rem; }
+  .dropzone-desktop { display: none !important; }
+  .dropzone-mobile { display: block; }
 }

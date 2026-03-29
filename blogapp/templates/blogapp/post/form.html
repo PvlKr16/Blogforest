@@ -58,8 +58,17 @@
             {% endif %}
             {% endwith %}
             {% endif %}
-            <input type="file" name="post_files" class="form-control" multiple>
-            <div class="form-text">Any file type. Max 5 MB per file.</div>
+            <!-- Desktop: drag & drop zone -->
+            <div class="dropzone dropzone-desktop" id="dropzone-post">
+              <div class="dropzone-icon">📎</div>
+              <div class="dropzone-text">Drag files here or <span class="dropzone-link">click to choose</span></div>
+              <div class="dropzone-hint">Any file type · Max 5 MB per file · Multiple files allowed</div>
+              <input type="file" name="post_files" id="post_files" class="dropzone-input" multiple>
+            </div>
+            <div class="dropzone-file-list dropzone-desktop" id="dropzone-post-list"></div>
+            <!-- Mobile: plain file input -->
+            <input type="file" name="post_files" class="form-control dropzone-mobile" multiple>
+            <div class="form-text dropzone-mobile">Any file type · Max 5 MB per file · Multiple files allowed</div>
           </div>
 
           <div style="display:flex; gap:12px; flex-wrap:wrap; margin-top:8px;">
