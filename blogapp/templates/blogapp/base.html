@@ -86,8 +86,8 @@
           <a href="{% url 'register' %}" class="nav-link">+ User</a>
           {% endif %}
           <a href="{% url 'profile' user.username %}" class="nav-link">{{ user.username }}</a>
-          <!-- Parchment scroll: unread topics notification -->
-          <a href="{% url 'unread_blogs' %}" class="nav-scroll-btn" title="Unread topics" aria-label="Unread topics">
+          <!-- Scroll icon: desktop only, hidden on mobile via CSS -->
+          <a href="{% url 'unread_blogs' %}" class="nav-scroll-btn nav-scroll-btn-desktop" title="Unread topics" aria-label="Unread topics">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none"
                  stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
               <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/>
@@ -105,6 +105,7 @@
       </nav>
 
       {% if user.is_authenticated %}
+      <!-- Scroll icon visible only on mobile, between search and burger -->
       <a href="{% url 'unread_blogs' %}" class="nav-scroll-btn nav-scroll-btn-mobile" title="Unread topics" aria-label="Unread topics">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none"
              stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
@@ -143,7 +144,7 @@
   <!-- ── Footer ── -->
   <footer class="site-footer">
     <div class="container">
-      <p>&copy; 2026 we3 <a href="{% url 'home' %}">BlogForest</a> &mdash; a place for work</p>
+      <p>&copy; 2024 <a href="{% url 'home' %}">BlogForest</a> &mdash; a place for thoughts and stories</p>
     </div>
   </footer>
 

@@ -344,10 +344,11 @@ def blog_remove_member(request, pk, user_id):
     # Only the member themselves can remove themselves from a topic
     if request.user == target:
         blog.members.remove(target)
-        messages.success(request, f'You have been removed from "{blog.title}".')
+        messages.success(request, f'You have left "{blog.title}".')
+        return redirect('home')
     else:
         messages.error(request, 'You can only remove yourself from a topic.')
-    return redirect('blog_detail', pk=blog.pk)
+        return redirect('blog_detail', pk=blog.pk)
 
 
 # ─── Posts ───────────────────────────────────────────────────────────────────

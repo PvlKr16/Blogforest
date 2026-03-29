@@ -874,6 +874,13 @@ textarea.form-control { resize: vertical; min-height: 100px; }
 .mb-0       { margin-bottom: 0; }
 .w-full     { width: 100%; }
 
+/* ── Members mobile block ────────────────────────────────────── */
+.members-mobile { display: none; }
+
+@media (max-width: 900px) {
+  .members-mobile { display: block; margin-top: 28px; }
+}
+
 /* ── Responsive ──────────────────────────────────────────────── */
 @media (max-width: 900px) {
   .content-grid {
@@ -950,6 +957,14 @@ textarea.form-control { resize: vertical; min-height: 100px; }
     text-align: center;
     padding: 9px 20px;
   }
+
+  /* Hero — compact on mobile */
+  .page-hero {
+    padding: 22px 0 18px;
+  }
+  .page-hero h1 { margin-bottom: 4px; }
+
+  /* Scroll icon: controlled by nav-scroll-btn-desktop / nav-scroll-btn-mobile classes */
 }
 
 @media (max-width: 420px) {
@@ -1131,6 +1146,14 @@ textarea.form-control { resize: vertical; min-height: 100px; }
 .profile-info-value { color: var(--text-primary); }
 
 /* ── Notification scroll icon ────────────────────────────────── */
+/* Desktop icon (.nav-scroll-btn-desktop) visible in nav on wide screens */
+/* Mobile icon (.nav-scroll-btn-mobile) visible between search and burger */
+.nav-scroll-btn.nav-scroll-btn-mobile { display: none; }
+@media (max-width: 680px) {
+  .nav-scroll-btn.nav-scroll-btn-desktop { display: none !important; }
+  .nav-scroll-btn.nav-scroll-btn-mobile  { display: inline-flex; }
+}
+
 .nav-scroll-btn {
   position: relative;
   display: inline-flex;
@@ -1207,81 +1230,4 @@ textarea.form-control { resize: vertical; min-height: 100px; }
   -webkit-box-orient: vertical;
   overflow: hidden;
   margin: 0;
-}
-
-/* ── Drag & Drop file zone ───────────────────────────────────── */
-.dropzone {
-  position: relative;
-  border: 2px dashed var(--border);
-  border-radius: var(--radius-md);
-  padding: 28px 20px;
-  text-align: center;
-  background: var(--stone-mist);
-  cursor: pointer;
-  transition: border-color .18s, background .18s;
-}
-.dropzone:hover,
-.dropzone.drag-over {
-  border-color: var(--green-soft);
-  background: var(--green-mist);
-}
-.dropzone.drag-over { border-style: solid; }
-.dropzone-icon { font-size: 2rem; margin-bottom: 8px; line-height: 1; }
-.dropzone-text { font-size: .92rem; color: var(--text-secondary); margin-bottom: 4px; }
-.dropzone-link { color: var(--green-deep); font-weight: 600; text-decoration: underline; }
-.dropzone-hint { font-size: .78rem; color: var(--text-muted); }
-.dropzone-input {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  opacity: 0;
-  cursor: pointer;
-}
-
-/* File list below dropzone */
-.dropzone-file-list {
-  margin-top: 10px;
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-.dropzone-file-item {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 6px 10px;
-  background: var(--surface-card);
-  border: 1px solid var(--border-light);
-  border-radius: var(--radius-sm);
-  font-size: .84rem;
-}
-.dropzone-file-item-name {
-  flex: 1;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  color: var(--text-primary);
-}
-.dropzone-file-item-size { color: var(--text-muted); flex-shrink: 0; }
-.dropzone-file-item-err { color: #c0392b; flex-shrink: 0; font-size: .78rem; }
-.dropzone-file-item-remove {
-  background: none;
-  border: none;
-  cursor: pointer;
-  color: var(--text-muted);
-  font-size: 1rem;
-  line-height: 1;
-  padding: 0 2px;
-  flex-shrink: 0;
-  transition: color .15s;
-}
-.dropzone-file-item-remove:hover { color: #c0392b; }
-
-/* Dropzone visibility: desktop-only for drag&drop, mobile gets plain input */
-.dropzone-mobile { display: none; }
-
-@media (max-width: 680px) {
-  .dropzone-desktop { display: none !important; }
-  .dropzone-mobile { display: block; }
 }
