@@ -123,18 +123,28 @@ def home(request):
             if SEARCH_IN_TITLE in active_scopes:
                 blog_filters |= Q(title__icontains=query)
             if SEARCH_IN_DESCRIPTION in active_scopes:
-                blog_filters |= Q(description__icontains=query) | Q(body__icontains=query)
+                blog_filters |= Q(description__icontains=query)
+            if SEARCH_IN_CONTENT in active_scopes:
+                blog_filters |= Q(body__icontains=query)
             if SEARCH_IN_AUTHOR in active_scopes:
                 blog_filters |= Q(owner__username__icontains=query)
 
-            # Post-level fields — match blogs that have relevant posts
-            if SEARCH_IN_CONTENT in active_scopes:
-                post_filters |= Q(posts__content__icontains=query)
+            # Post-level fields — match blogs that have relevant comments
             if SEARCH_IN_COMMENTS in active_scopes:
-                post_filters |= Q(posts__comments__content__icontains=query)
+                post_filters |= Q(posts__content__icontains=query)
 
-            combined = blog_filters | post_filters
-            blogs_qs = blogs_qs.filter(combined).distinct()
+
+            # Only combine non-empty filter sets to avoid Q() matching everything
+            combined = Q()
+            if blog_filters:
+                combined |= blog_filters
+            if post_filters:
+                combined |= post_filters
+
+            if combined:
+                blogs_qs = blogs_qs.filter(combined).distinct()
+            else:
+                blogs_qs = blogs_qs.none()
 
         if date_from:
             blogs_qs = blogs_qs.filter(created_at__date__gte=date_from)
