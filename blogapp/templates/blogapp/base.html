@@ -99,6 +99,16 @@
             {% if unread_count %}<span class="nav-scroll-badge">{{ unread_count }}</span>{% endif %}
           </a>
           <a href="{% url 'logout' %}" class="nav-link">Log out</a>
+          <!-- Settings gear — desktop -->
+          <button class="settings-btn" id="settings-btn-desktop"
+                  title="Settings" aria-label="Settings">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none"
+                 stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="3"/>
+              <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+            </svg>
+          </button>
+
         {% else %}
           <a href="{% url 'login' %}" class="nav-link">Log in</a>
         {% endif %}
@@ -148,6 +158,66 @@
     </div>
   </footer>
 
+</div>
+
+<!-- ── Settings overlay ── -->
+<div class="settings-overlay" id="settings-overlay"></div>
+
+<!-- ── Settings panel ── -->
+<div class="settings-panel" id="settings-panel">
+  <div class="settings-panel-head">Settings</div>
+
+  <!-- Colors -->
+  <button class="settings-menu-item" id="colors-menu-item">
+    <span style="display:flex; align-items:center; gap:8px;">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="12" cy="12" r="10"/>
+        <path d="M12 2a10 10 0 0 1 0 20"/>
+        <path d="M12 2c2.76 0 5 4.48 5 10s-2.24 10-5 10"/>
+      </svg>
+      Colors
+    </span>
+    <span class="item-arrow">›</span>
+  </button>
+  <div class="color-submenu" id="color-submenu">
+    <div class="color-scheme-option" data-theme="emerald">
+      <div class="color-scheme-swatch">
+        <span style="background:#065f46;"></span>
+        <span style="background:#34d399;"></span>
+        <span style="background:#94a3b8;"></span>
+      </div>
+      <span class="color-scheme-label">Emerald</span>
+    </div>
+    <div class="color-scheme-option" data-theme="ultramarine">
+      <div class="color-scheme-swatch">
+        <span style="background:#1e3a8a;"></span>
+        <span style="background:#60a5fa;"></span>
+        <span style="background:#94a3b8;"></span>
+      </div>
+      <span class="color-scheme-label">Ultramarine</span>
+    </div>
+    <div class="color-scheme-option" data-theme="violet">
+      <div class="color-scheme-swatch">
+        <span style="background:#5b21b6;"></span>
+        <span style="background:#f97316;"></span>
+        <span style="background:#94a3b8;"></span>
+      </div>
+      <span class="color-scheme-label">Violet & Orange</span>
+    </div>
+  </div>
+
+  <!-- Language (placeholder) -->
+  <button class="settings-menu-item" style="color:var(--text-muted); cursor:default;">
+    <span style="display:flex; align-items:center; gap:8px;">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M5 8l6 6"/><path d="m4 14 6-6 2-3"/><path d="M2 5h12"/>
+        <path d="M7 2h1"/><path d="m22 22-5-10-5 10"/>
+        <path d="M14 18h6"/>
+      </svg>
+      Language
+    </span>
+    <span style="font-size:.72rem; color:var(--text-muted);">soon</span>
+  </button>
 </div>
 
 <script src="{% static 'blogapp/js/main.js' %}"></script>

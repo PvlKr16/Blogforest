@@ -70,6 +70,67 @@ document.addEventListener('DOMContentLoaded', function () {
   });
 
 
+  // ── Settings panel ───────────────────────────────────────────
+  const settingsPanel   = document.getElementById('settings-panel');
+  const settingsOverlay = document.getElementById('settings-overlay');
+  const settingsBtnD    = document.getElementById('settings-btn-desktop');
+  const colorsMenuItem  = document.getElementById('colors-menu-item');
+  const colorSubmenu    = document.getElementById('color-submenu');
+
+  function openSettings() {
+    settingsPanel?.classList.add('open');
+    settingsOverlay?.classList.add('open');
+    settingsBtnD?.classList.add('open');
+  }
+  function closeSettings() {
+    settingsPanel?.classList.remove('open');
+    settingsOverlay?.classList.remove('open');
+    settingsBtnD?.classList.remove('open');
+    colorsMenuItem?.classList.remove('submenu-open');
+    colorSubmenu?.classList.remove('open');
+  }
+
+  [settingsBtnD].forEach(btn => {
+    btn?.addEventListener('click', function (e) {
+      e.stopPropagation();
+      settingsPanel?.classList.contains('open') ? closeSettings() : openSettings();
+    });
+  });
+
+  settingsOverlay?.addEventListener('click', closeSettings);
+
+  // Colors submenu toggle
+  colorsMenuItem?.addEventListener('click', function () {
+    const isOpen = colorSubmenu?.classList.contains('open');
+    colorSubmenu?.classList.toggle('open', !isOpen);
+    colorsMenuItem?.classList.toggle('submenu-open', !isOpen);
+  });
+
+  // Apply saved theme on load
+  const THEME_KEY = 'bf-theme';
+  function applyTheme(theme) {
+    if (theme === 'emerald' || !theme) {
+      document.documentElement.removeAttribute('data-theme');
+    } else {
+      document.documentElement.setAttribute('data-theme', theme);
+    }
+    // Update active state on swatches
+    document.querySelectorAll('.color-scheme-option').forEach(el => {
+      el.classList.toggle('active', el.dataset.theme === (theme || 'emerald'));
+    });
+    localStorage.setItem(THEME_KEY, theme || 'emerald');
+  }
+
+  // Restore theme from localStorage
+  applyTheme(localStorage.getItem(THEME_KEY) || 'emerald');
+
+  // Color scheme picker
+  document.querySelectorAll('.color-scheme-option').forEach(option => {
+    option.addEventListener('click', function () {
+      applyTheme(this.dataset.theme);
+    });
+  });
+
   // ── Drag & Drop file zones ────────────────────────────────────
   const MAX_FILE_MB = 5;
   const MAX_BYTES = MAX_FILE_MB * 1024 * 1024;
