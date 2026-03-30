@@ -1413,3 +1413,17 @@ textarea.form-control { resize: vertical; min-height: 100px; }
   z-index: 199;
 }
 .settings-overlay.open { display: block; }
+
+/* ── Sidebar status icon (replaces cover image) ──────────────── */
+.sidebar-status-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-sm);
+  background: var(--accent-mist);
+  border: 1px solid var(--border-light);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.1rem;
+  flex-shrink: 0;
+}

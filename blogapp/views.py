@@ -160,12 +160,12 @@ def home(request):
     else:
         # Default view: list of visible blogs sorted by latest comment (post) date
         # Annotate each blog with the timestamp of its most recent post
+        from django.db.models.functions import Coalesce
         blogs_with_activity = visible_blogs.annotate(
-            last_post_at=Max('posts__created_at')
-        ).order_by(
-            # Use the annotated field — blogs with no posts sort to bottom
-            '-last_post_at'
-        ).select_related('owner').prefetch_related('members')
+            last_post_at=Max('posts__created_at'),
+            # activity = latest post time if exists, otherwise topic creation time
+            activity=Coalesce(Max('posts__created_at'), 'created_at'),
+        ).order_by('-activity').select_related('owner').prefetch_related('members')
 
         paginator = Paginator(blogs_with_activity, 10)
         page = request.GET.get('page')
