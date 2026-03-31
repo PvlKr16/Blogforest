@@ -860,7 +860,7 @@ textarea.form-control { resize: vertical; min-height: 100px; }
 .blog-hero {
   position: relative;
   min-height: 180px;
-  background: linear-gradient(135deg, #065f46 0%, #047857 100%);
+  background: linear-gradient(135deg, var(--header-bg-from) 0%, var(--accent-2) 100%);
   border-radius: var(--radius-lg);
   overflow: hidden;
   margin-bottom: 28px;
@@ -890,13 +890,13 @@ textarea.form-control { resize: vertical; min-height: 100px; }
 /* ── Footer ──────────────────────────────────────────────────── */
 .site-footer {
   margin-top: auto;
-  background: var(--green-deep);
+  background: var(--accent-1);
   color: rgba(255,255,255,.75);
   padding: 28px 0;
   font-size: .85rem;
   text-align: center;
 }
-.site-footer a { color: var(--green-pale); }
+.site-footer a { color: var(--accent-pale); }
 .site-footer a:hover { color: #fff; }
 
 /* ── Utilities ───────────────────────────────────────────────── */
@@ -1426,4 +1426,126 @@ textarea.form-control { resize: vertical; min-height: 100px; }
   justify-content: center;
   font-size: 1.1rem;
   flex-shrink: 0;
+}
+
+/* ── Comment header (author bar) ─────────────────────────────── */
+.comment-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 18px;
+  background: var(--stone-mist);
+  border-bottom: 1px solid var(--border-light);
+  border-radius: var(--radius-md) var(--radius-md) 0 0;
+}
+.comment-avatar {
+  width: 26px;
+  height: 26px;
+  font-size: .72rem;
+  flex-shrink: 0;
+}
+.comment-avatar-img {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+.comment-author-name {
+  font-size: .88rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+.comment-author-name:hover { color: var(--accent-1); }
+
+/* ── Topic card author with avatar ───────────────────────────── */
+.topic-card-author {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: .82rem;
+}
+.topic-card-author-avatar {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+/* ── Drag & Drop file zone ───────────────────────────────────── */
+.dropzone {
+  position: relative;
+  border: 2px dashed var(--border);
+  border-radius: var(--radius-md);
+  padding: 28px 20px;
+  text-align: center;
+  background: var(--stone-mist);
+  cursor: pointer;
+  transition: border-color .18s, background .18s;
+}
+.dropzone:hover,
+.dropzone.drag-over {
+  border-color: var(--accent-soft);
+  background: var(--accent-mist);
+}
+.dropzone.drag-over { border-style: solid; }
+.dropzone-icon { font-size: 2rem; margin-bottom: 8px; line-height: 1; }
+.dropzone-text { font-size: .92rem; color: var(--text-secondary); margin-bottom: 4px; }
+.dropzone-link { color: var(--accent-1); font-weight: 600; text-decoration: underline; }
+.dropzone-hint { font-size: .78rem; color: var(--text-muted); }
+.dropzone-input {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  cursor: pointer;
+}
+
+/* File list below dropzone */
+.dropzone-file-list {
+  margin-top: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.dropzone-file-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  background: var(--surface-card);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-sm);
+  font-size: .84rem;
+}
+.dropzone-file-item-name {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--text-primary);
+}
+.dropzone-file-item-size { color: var(--text-muted); flex-shrink: 0; }
+.dropzone-file-item-err { color: #c0392b; flex-shrink: 0; font-size: .78rem; }
+.dropzone-file-item-remove {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--text-muted);
+  font-size: 1rem;
+  line-height: 1;
+  padding: 0 2px;
+  flex-shrink: 0;
+  transition: color .15s;
+}
+.dropzone-file-item-remove:hover { color: #c0392b; }
+
+/* Desktop only / mobile only visibility */
+.dropzone-mobile { display: none; }
+@media (max-width: 680px) {
+  .dropzone-desktop { display: none !important; }
+  .dropzone-mobile { display: block; }
 }

@@ -35,7 +35,13 @@
             </h2>
             <div class="topic-card-meta">
               <span class="text-muted text-sm">{{ blog.created_at|date:"Y-m-d H:i" }}</span>
-              <span class="text-muted text-sm">
+              <span class="topic-card-author">
+                {% if blog.owner.profile.avatar %}
+                <img src="{{ blog.owner.profile.avatar.url }}" alt="{{ blog.owner.username }}"
+                     class="topic-card-author-avatar">
+                {% else %}
+                <div class="avatar" style="width:20px;height:20px;font-size:.62rem;flex-shrink:0;">{{ blog.owner.username|first|upper }}</div>
+                {% endif %}
                 <a href="{% url 'profile' blog.owner.username %}" style="color:var(--text-muted);">
                   {{ blog.owner.username }}
                 </a>
@@ -82,7 +88,13 @@
             <!-- Meta row: date left, author right -->
             <div class="topic-card-meta">
               <span class="text-muted text-sm">{{ blog.created_at|date:"Y-m-d H:i" }}</span>
-              <span class="text-muted text-sm">
+              <span class="topic-card-author">
+                {% if blog.owner.profile.avatar %}
+                <img src="{{ blog.owner.profile.avatar.url }}" alt="{{ blog.owner.username }}"
+                     class="topic-card-author-avatar">
+                {% else %}
+                <div class="avatar" style="width:20px;height:20px;font-size:.62rem;flex-shrink:0;">{{ blog.owner.username|first|upper }}</div>
+                {% endif %}
                 <a href="{% url 'profile' blog.owner.username %}" style="color:var(--text-muted);">
                   {{ blog.owner.username }}
                 </a>

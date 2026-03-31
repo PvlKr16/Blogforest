@@ -96,17 +96,27 @@
 
       {% for post in posts %}
       <article class="card post-card" id="comment-{{ post.pk }}">
-        <div class="card-body">
-          <div style="display:flex; justify-content:space-between; align-items:baseline; gap:12px; margin-bottom:8px;">
-            <h3 class="post-card-title mb-0">{{ post.title }}</h3>
-            <div class="flex items-center gap-2" style="flex-shrink:0;">
-              <span class="text-muted text-sm" style="white-space:nowrap;">{{ post.created_at|date:"Y-m-d H:i" }}</span>
-              {% if user.is_staff %}
-              <a href="{% url 'post_edit' post.pk %}" class="btn btn-ghost btn-sm" style="font-size:.75rem; padding:2px 8px;">✏️</a>
-              <a href="{% url 'post_delete' post.pk %}" class="btn btn-ghost btn-sm" style="font-size:.75rem; padding:2px 8px; color:#c0392b; border-color:#f5c2c0;">🗑</a>
-              {% endif %}
-            </div>
+        <!-- Comment header: grey background, avatar + author left, time right -->
+        <div class="comment-header">
+          <div class="flex items-center gap-2">
+            {% if post.author.profile.avatar %}
+            <img src="{{ post.author.profile.avatar.url }}" alt="{{ post.author.username }}"
+                 class="comment-avatar-img">
+            {% else %}
+            <div class="avatar comment-avatar">{{ post.author.username|first|upper }}</div>
+            {% endif %}
+            <a href="{% url 'profile' post.author.username %}" class="comment-author-name">{{ post.author.username }}</a>
           </div>
+          <div class="flex items-center gap-2" style="flex-shrink:0;">
+            <span class="text-muted text-sm" style="white-space:nowrap;">{{ post.created_at|date:"Y-m-d H:i" }}</span>
+            {% if user.is_staff %}
+            <a href="{% url 'post_edit' post.pk %}" class="btn btn-ghost btn-sm" style="font-size:.75rem; padding:2px 8px;">✏️</a>
+            <a href="{% url 'post_delete' post.pk %}" class="btn btn-ghost btn-sm" style="font-size:.75rem; padding:2px 8px; color:#c0392b; border-color:#f5c2c0;">🗑</a>
+            {% endif %}
+          </div>
+        </div>
+        <div class="card-body">
+          {% if post.title %}<h3 class="post-card-title">{{ post.title }}</h3>{% endif %}
           <p class="post-card-excerpt">{{ post.content|truncatewords:35 }}</p>
           {% if post.tags.all %}
           <div class="flex flex-wrap gap-2 mt-3">
@@ -148,14 +158,7 @@
           {% endif %}
           {% endwith %}
         </div>
-        <div class="card-footer">
-          <div class="flex items-center gap-2">
-            <div class="avatar" style="width:24px;height:24px;font-size:.7rem;">
-              {{ post.author.username|first|upper }}
-            </div>
-            <a href="{% url 'profile' post.author.username %}" class="text-sm">{{ post.author.username }}</a>
-          </div>
-        </div>
+
       </article>
       {% empty %}
       <div class="card">
