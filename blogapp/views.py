@@ -413,7 +413,7 @@ def post_create(request, blog_pk):
         form = PostForm()
 
     return render(request, 'blogapp/post/form.html', {
-        'form': form, 'blog': blog, 'action': 'New post'
+        'form': form, 'blog': blog, 'action': 'Save'
     })
 
 
@@ -445,7 +445,7 @@ def post_edit(request, pk):
         form = PostForm(instance=post, initial={'tags_input': tags_str})
 
     return render(request, 'blogapp/post/form.html', {
-        'form': form, 'post': post, 'blog': post.blog, 'action': 'Edit post'
+        'form': form, 'post': post, 'blog': post.blog, 'action': 'Save'
     })
 
 
