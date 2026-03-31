@@ -5,6 +5,12 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Log in — BlogForest</title>
+  <script>
+    (function(){
+      var t = '{{ user_theme|default:"emerald" }}';
+      if (t && t !== 'emerald') document.documentElement.setAttribute('data-theme', t);
+    })();
+  </script>
   <link rel="stylesheet" href="{% static 'blogapp/css/main.css' %}">
 </head>
 <body>

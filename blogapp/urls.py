@@ -37,6 +37,8 @@ urlpatterns = [
     # Tags
     path('tag/<slug:slug>/', views.tag_posts, name='tag_posts'),
 
+    path('set-theme/', views.set_theme, name='set_theme'),
+
     # Users & notifications
     path('users/', views.user_list, name='user_list'),
     path('user/<str:username>/', views.profile, name='profile'),

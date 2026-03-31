@@ -662,7 +662,7 @@ textarea.form-control { resize: vertical; min-height: 100px; }
   overflow: hidden;
 }
 .auth-card-head {
-  background: linear-gradient(135deg, #064e3b, #047857);
+  background: linear-gradient(135deg, var(--header-bg-from) 0%, var(--accent-2) 55%, var(--header-bg-to) 100%);
   padding: 30px 32px 24px;
   text-align: center;
 }

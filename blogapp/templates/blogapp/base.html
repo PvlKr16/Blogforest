@@ -1,10 +1,17 @@
 {% load static %}
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="ru" {% if user_theme and user_theme != "emerald" %}data-theme="{{ user_theme }}"{% endif %}>
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>{% block title %}BlogForest{% endblock %}</title>
+  <!-- Anti-FOUC: apply theme before CSS renders -->
+  <script>
+    (function(){
+      var t = '{{ user_theme|default:"emerald" }}';
+      if (t && t !== 'emerald') document.documentElement.setAttribute('data-theme', t);
+    })();
+  </script>
   <link rel="stylesheet" href="{% static 'blogapp/css/main.css' %}">
   {% block extra_css %}{% endblock %}
 </head>

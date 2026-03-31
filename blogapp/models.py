@@ -11,9 +11,15 @@ def avatar_upload_path(instance, filename):
 
 class UserProfile(models.Model):
     """Extends the built-in User with a guest role flag and avatar photo."""
+    THEME_CHOICES = [
+        ('emerald',      'Emerald'),
+        ('ultramarine',  'Ultramarine'),
+        ('violet',       'Violet & Orange'),
+    ]
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='profile')
     is_guest = models.BooleanField(default=False)
     avatar = models.ImageField(upload_to=avatar_upload_path, blank=True, null=True)
+    theme = models.CharField(max_length=32, choices=THEME_CHOICES, default='emerald')
 
     class Meta:
         verbose_name = 'User profile'

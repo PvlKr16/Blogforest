@@ -81,11 +81,15 @@ def login_view(request):
                 messages.error(request, 'Invalid email or password.')
     else:
         form = LoginForm()
-    return render(request, 'blogapp/auth/login.html', {'form': form})
+    theme = request.session.get('last_theme', 'emerald')
+    return render(request, 'blogapp/auth/login.html', {'form': form, 'user_theme': theme})
 
 
 def logout_view(request):
+    # Preserve theme preference across logout so login page shows correct colours
+    theme = getattr(getattr(request.user, 'profile', None), 'theme', 'emerald')         if request.user.is_authenticated else 'emerald'
     logout(request)
+    request.session['last_theme'] = theme
     return redirect('login')
 
 
@@ -584,6 +588,23 @@ def unread_blogs(request):
         'unread_blogs': unread,
         'sort': sort,
     })
+
+
+# ─── Theme ───────────────────────────────────────────────────────────────────
+
+@login_required
+@require_POST
+def set_theme(request):
+    from blogapp.models import UserProfile
+    theme = request.POST.get('theme', 'emerald')
+    valid = {'emerald', 'ultramarine', 'violet'}
+    if theme not in valid:
+        theme = 'emerald'
+    profile, _ = UserProfile.objects.get_or_create(user=request.user)
+    profile.theme = theme
+    profile.save(update_fields=['theme'])
+    from django.http import JsonResponse
+    return JsonResponse({'theme': theme})
 
 
 # ─── User list ────────────────────────────────────────────────────────────────

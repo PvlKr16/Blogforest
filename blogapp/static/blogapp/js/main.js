@@ -106,28 +106,39 @@ document.addEventListener('DOMContentLoaded', function () {
     colorsMenuItem?.classList.toggle('submenu-open', !isOpen);
   });
 
-  // Apply saved theme on load
-  const THEME_KEY = 'bf-theme';
+  // Apply theme: set data-theme attribute and update swatch active state
   function applyTheme(theme) {
-    if (theme === 'emerald' || !theme) {
+    if (!theme || theme === 'emerald') {
       document.documentElement.removeAttribute('data-theme');
     } else {
       document.documentElement.setAttribute('data-theme', theme);
     }
-    // Update active state on swatches
     document.querySelectorAll('.color-scheme-option').forEach(el => {
       el.classList.toggle('active', el.dataset.theme === (theme || 'emerald'));
     });
-    localStorage.setItem(THEME_KEY, theme || 'emerald');
   }
 
-  // Restore theme from localStorage
-  applyTheme(localStorage.getItem(THEME_KEY) || 'emerald');
+  // Read current theme from <html data-theme> set by server (no localStorage needed)
+  const currentTheme = document.documentElement.getAttribute('data-theme') || 'emerald';
+  applyTheme(currentTheme);
 
-  // Color scheme picker
+  // Color scheme picker — save to server so it persists across devices and sessions
   document.querySelectorAll('.color-scheme-option').forEach(option => {
     option.addEventListener('click', function () {
-      applyTheme(this.dataset.theme);
+      const theme = this.dataset.theme;
+      applyTheme(theme);
+      // Persist on server via POST (CSRF token from cookie)
+      const csrf = document.cookie.match(/csrftoken=([^;]+)/);
+      if (csrf) {
+        fetch('/set-theme/', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'X-CSRFToken': csrf[1],
+          },
+          body: 'theme=' + encodeURIComponent(theme),
+        });
+      }
     });
   });
 
