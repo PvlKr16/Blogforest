@@ -28,11 +28,7 @@
             {% if form.content.errors %}<ul class="errorlist">{% for e in form.content.errors %}<li>{{ e }}</li>{% endfor %}</ul>{% endif %}
           </div>
 
-          <div class="form-group">
-            <label class="form-label" for="{{ form.tags_input.id_for_label }}">{{ form.tags_input.label }}</label>
-            {{ form.tags_input }}
-            <div class="form-text">Example: travel, photography, life</div>
-          </div>
+{% comment %}Tags hidden{% endcomment %}
 
           <!-- File attachments -->
           <div class="form-group">
