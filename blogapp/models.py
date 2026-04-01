@@ -82,7 +82,8 @@ class Blog(models.Model):
     def can_post(self, user):
         if not user.is_authenticated:
             return False
-        return user == self.owner or self.members.filter(pk=user.pk).exists()
+        # Any authenticated user who can view the blog can post a comment
+        return self.can_view(user)
 
     def is_member(self, user):
         if not user.is_authenticated:

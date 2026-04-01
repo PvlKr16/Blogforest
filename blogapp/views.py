@@ -399,9 +399,11 @@ def post_create(request, blog_pk):
                     size=f.size
                 )
 
+            # Auto-add commenter as member so they receive future unread notifications
+            if request.user != blog.owner:
+                blog.members.add(request.user)
+
             # Mark blog as read for the author at the post's timestamp
-            # so the author's own new post doesn't appear as unread for them,
-            # but does appear as unread for all other members
             from django.utils import timezone
             BlogRead.objects.update_or_create(
                 user=request.user, blog=blog,
