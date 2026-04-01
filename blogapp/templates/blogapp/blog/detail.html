@@ -177,6 +177,16 @@
         {% if posts.has_next %}<a href="?page={{ posts.next_page_number }}">›</a>{% endif %}
       </div>
       {% endif %}
+
+      <!-- Mark as unread — desktop -->
+      {% if user.is_authenticated %}
+      <form method="post" action="{% url 'mark_unread' blog.pk %}" style="margin-top:16px;">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-ghost btn-sm" style="color:var(--text-muted);">
+          📌 Mark as unread
+        </button>
+      </form>
+      {% endif %}
     </div>
 
     <!-- Sidebar -->
@@ -295,6 +305,21 @@
         {% endif %}
       </div>
     </div>
+
+    <!-- Mark as unread — mobile -->
+    {% if user.is_authenticated %}
+    <div class="sidebar-widget" style="margin-top:12px;">
+      <div class="sidebar-widget-body">
+        <form method="post" action="{% url 'mark_unread' blog.pk %}">
+          {% csrf_token %}
+          <button type="submit" class="btn btn-ghost btn-sm w-full" style="color:var(--text-muted);">
+            📌 Mark as unread
+          </button>
+        </form>
+      </div>
+    </div>
+    {% endif %}
+
     {% if user.is_staff %}
     <div class="sidebar-widget" style="margin-top:12px;">
       <div class="sidebar-widget-head">Manage</div>

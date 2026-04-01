@@ -33,6 +33,7 @@ urlpatterns = [
     # Unread
 
     path('unread/', views.unread_blogs, name='unread_blogs'),
+    path('blogs/<int:pk>/mark-unread/', views.mark_unread, name='mark_unread'),
 
     # Tags
     path('tag/<slug:slug>/', views.tag_posts, name='tag_posts'),
