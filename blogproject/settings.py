@@ -13,7 +13,7 @@ DEBUG = os.getenv('DEBUG', 'True') == 'True'
 
 ALLOWED_HOSTS = os.getenv(
     'ALLOWED_HOSTS',
-    'localhost 127.0.0.1 192.168.0.201 192.168.0.202'
+    'localhost 127.0.0.1 192.168.0.201 192.168.0.202 .trycloudflare.com'
 ).split()
 
 INSTALLED_APPS = [
@@ -37,6 +37,8 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
+
+CSRF_TRUSTED_ORIGINS = ['https://*.trycloudflare.com']
 
 ROOT_URLCONF = 'blogproject.urls'
 
