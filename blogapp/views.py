@@ -592,6 +592,14 @@ def unread_blogs(request):
     })
 
 
+# ─── Unread count API ────────────────────────────────────────────────────────
+
+@login_required
+def unread_count_api(request):
+    from django.http import JsonResponse
+    return JsonResponse({'count': get_unread_count(request.user)})
+
+
 # ─── Mark unread ─────────────────────────────────────────────────────────────
 
 @login_required

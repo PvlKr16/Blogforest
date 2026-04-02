@@ -59,6 +59,39 @@ document.addEventListener('DOMContentLoaded', function () {
     }
   }
 
+  // ── Unread count polling ─────────────────────────────────────
+  (function () {
+    const badges = document.querySelectorAll('.nav-scroll-badge');
+    const btns   = document.querySelectorAll('.nav-scroll-btn');
+    if (!btns.length) return; // not logged in
+
+    function updateBadges(count) {
+      btns.forEach(btn => {
+        let badge = btn.querySelector('.nav-scroll-badge');
+        if (count > 0) {
+          if (!badge) {
+            badge = document.createElement('span');
+            badge.className = 'nav-scroll-badge';
+            btn.appendChild(badge);
+          }
+          badge.textContent = count;
+        } else {
+          if (badge) badge.remove();
+        }
+      });
+    }
+
+    function poll() {
+      fetch('/api/unread-count/', { credentials: 'same-origin' })
+        .then(r => r.ok ? r.json() : null)
+        .then(data => { if (data) updateBadges(data.count); })
+        .catch(() => {});
+    }
+
+    // Poll every 60 seconds
+    setInterval(poll, 60000);
+  })();
+
   // ── Password toggle ───────────────────────────────────────────
   document.querySelectorAll('.password-toggle').forEach(function (btn) {
     btn.addEventListener('click', function () {
