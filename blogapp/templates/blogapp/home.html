@@ -1,20 +1,7 @@
 {% extends 'blogapp/base.html' %}
-{% block title %}BlogForest{% endblock %}
+{% block title %}CurrentAffairs{% endblock %}
 
 {% block content %}
-<!-- Hero -->
-<div class="page-hero">
-  <div class="container">
-    {% if query %}
-      <h1>Search: «{{ query }}»</h1>
-      <p>Topics found: {{ items.paginator.count }}</p>
-    {% else %}
-      <h1>Welcome to BlogForest</h1>
-      <p>Read, write and share your stories</p>
-    {% endif %}
-  </div>
-</div>
-
 <div class="container">
   <div class="content-grid">
 

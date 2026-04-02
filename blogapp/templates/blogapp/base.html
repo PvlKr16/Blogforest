@@ -4,7 +4,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>{% block title %}BlogForest{% endblock %}</title>
+  <title>{% block title %}CurrentAffairs{% endblock %}</title>
   <!-- Anti-FOUC: apply theme before CSS renders -->
   <script>
     (function(){
@@ -21,7 +21,7 @@
   <!-- ── Header ── -->
   <header class="site-header">
     <div class="container header-inner">
-      <a href="{% url 'home' %}" class="site-logo">Blog<span>Forest</span></a>
+      <a href="{% url 'home' %}" class="site-logo">Current<span>Affairs</span></a>
 
       <!-- Search with dropdown options -->
       <div class="header-search" id="search-wrapper">
@@ -30,7 +30,7 @@
             <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
           </svg>
           <input type="text" name="q" id="search-input"
-                 placeholder="Search posts..."
+                 placeholder="Search..."
                  value="{{ request.GET.q|default:'' }}">
           <!-- Search options dropdown -->
           <div id="search-dropdown">
@@ -163,7 +163,7 @@
   <!-- ── Footer ── -->
   <footer class="site-footer">
     <div class="container">
-      <p>&copy; 2026 <a href="{% url 'home' %}">BlogForest</a></p>
+      <p>&copy; 2026 <a href="{% url 'home' %}">CurrentAffairs</a></p>
     </div>
   </footer>
 
