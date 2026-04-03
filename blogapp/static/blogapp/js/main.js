@@ -175,6 +175,82 @@ document.addEventListener('DOMContentLoaded', function () {
     });
   });
 
+  // ── Quote tooltip ────────────────────────────────────────────
+  (function () {
+    if (!document.querySelector('.quote-source')) return;
+
+    // Derive post_create URL from current page: /blogs/<pk>/ → /blogs/<pk>/posts/create/
+    var pathMatch = window.location.pathname.match(/\/blogs\/(\d+)/);
+    if (!pathMatch) return;
+    var createUrl = '/blogs/' + pathMatch[1] + '/posts/create/';
+
+    var tooltip = document.createElement('div');
+    tooltip.id = 'quote-tooltip';
+    tooltip.textContent = '💬 Quote';
+    document.body.appendChild(tooltip);
+
+    var hideTimer = null;
+
+    function showTooltip(x, y, text, authorId) {
+      clearTimeout(hideTimer);
+      tooltip.dataset.text = text;
+      tooltip.dataset.authorId = authorId || '';
+      tooltip.style.left = x + 'px';
+      tooltip.style.top  = (y + window.scrollY - 44) + 'px';
+      tooltip.style.display = 'block';
+    }
+
+    function hideTooltip() {
+      hideTimer = setTimeout(function () { tooltip.style.display = 'none'; }, 150);
+    }
+
+    document.addEventListener('mouseup', function (e) {
+      if (e.target === tooltip) return;
+      var sel = window.getSelection();
+      if (!sel || sel.isCollapsed) { hideTooltip(); return; }
+      var text = sel.toString().trim();
+      if (text.length < 3) { hideTooltip(); return; }
+
+      // Walk up DOM to find .quote-source
+      var node = sel.anchorNode;
+      var source = null;
+      while (node && node !== document.body) {
+        if (node.nodeType === 1 && node.classList && node.classList.contains('quote-source')) {
+          source = node; break;
+        }
+        node = node.parentNode;
+      }
+      if (!source) { hideTooltip(); return; }
+
+      var authorId = source.dataset.authorId || '';
+      var range = sel.getRangeAt(0);
+      var rect  = range.getBoundingClientRect();
+      showTooltip(rect.left + rect.width / 2, rect.top, text, authorId);
+    });
+
+    document.addEventListener('mousedown', function (e) {
+      if (e.target !== tooltip) hideTooltip();
+    });
+
+    tooltip.addEventListener('mouseenter', function () { clearTimeout(hideTimer); });
+    tooltip.addEventListener('mouseleave', hideTooltip);
+
+    // preventDefault stops mousedown from collapsing the selection
+    tooltip.addEventListener('mousedown', function (e) { e.preventDefault(); });
+
+    tooltip.addEventListener('click', function () {
+      var text     = tooltip.dataset.text;
+      var authorId = tooltip.dataset.authorId;
+      if (!text) return;
+      var url = createUrl
+        + '?quote=' + encodeURIComponent(text)
+        + (authorId ? '&author_id=' + encodeURIComponent(authorId) : '');
+      tooltip.style.display = 'none';
+      window.getSelection().removeAllRanges();
+      window.location.href = url;
+    });
+  })();
+
   // ── Drag & Drop file zones ────────────────────────────────────
   const MAX_FILE_MB = 5;
   const MAX_BYTES = MAX_FILE_MB * 1024 * 1024;

@@ -662,7 +662,7 @@ textarea.form-control { resize: vertical; min-height: 100px; }
   overflow: hidden;
 }
 .auth-card-head {
-  background: linear-gradient(135deg, var(--header-bg-from) 0%, var(--accent-2) 55%, var(--header-bg-to) 100%);
+  background: linear-gradient(135deg, #064e3b, #047857);
   padding: 30px 32px 24px;
   text-align: center;
 }
@@ -1549,3 +1549,52 @@ textarea.form-control { resize: vertical; min-height: 100px; }
   .dropzone-desktop { display: none !important; }
   .dropzone-mobile { display: block; }
 }
+
+/* ── Quote block ─────────────────────────────────────────────── */
+.quote-block {
+  border-left: 3px solid var(--accent-soft);
+  padding: 8px 14px;
+  margin: 0;
+  background: var(--accent-mist);
+  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+  color: var(--text-secondary);
+  font-size: .9rem;
+  font-style: italic;
+}
+.quote-preview { margin-bottom: 8px; }
+.quote-preview-label {
+  font-size: .78rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: .5px;
+  margin-bottom: 4px;
+}
+
+/* ── Quote tooltip ───────────────────────────────────────────── */
+#quote-tooltip {
+  position: absolute;
+  z-index: 500;
+  background: var(--accent-1);
+  color: #fff;
+  border-radius: var(--radius-sm);
+  padding: 5px 12px;
+  font-size: .82rem;
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+  box-shadow: var(--shadow-md);
+  display: none;
+  user-select: none;
+  transform: translateX(-50%);
+}
+#quote-tooltip::after {
+  content: '';
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border: 5px solid transparent;
+  border-top-color: var(--accent-1);
+}
+#quote-tooltip:hover { background: var(--accent-2); }

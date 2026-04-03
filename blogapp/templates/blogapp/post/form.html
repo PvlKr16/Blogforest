@@ -4,7 +4,7 @@
 {% block content %}
 <div class="page-hero">
   <div class="container">
-    <h1>{{ action }}</h1>
+    <h1>{% if quote_text %}Reply to quote{% else %}{{ action }}{% endif %}</h1>
     <p>Topic: <a href="{{ blog.get_absolute_url }}" style="color:rgba(255,255,255,.85);">{{ blog.title }}</a></p>
   </div>
 </div>
@@ -21,6 +21,17 @@
             {{ form.title }}
             {% if form.title.errors %}<ul class="errorlist">{% for e in form.title.errors %}<li>{{ e }}</li>{% endfor %}</ul>{% endif %}
           </div>
+
+          {% if quote_text %}
+          <div class="form-group">
+            <div class="quote-preview">
+              <div class="quote-preview-label">↩ Replying to:</div>
+              <blockquote class="quote-block">{{ quote_text }}</blockquote>
+            </div>
+            <input type="hidden" name="quote_text" value="{{ quote_text }}">
+            <input type="hidden" name="quote_author_id" value="{{ quote_author_id }}">
+          </div>
+          {% endif %}
 
           <div class="form-group">
             <label class="form-label" for="{{ form.content.id_for_label }}">{{ form.content.label }}</label>

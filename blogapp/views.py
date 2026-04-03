@@ -399,9 +399,26 @@ def post_create(request, blog_pk):
                     size=f.size
                 )
 
-            # Auto-add commenter as member so they receive future unread notifications
+            # Auto-add commenter as member
             if request.user != blog.owner:
                 blog.members.add(request.user)
+
+            # Handle quote: save cited fragment and notify quoted author
+            quote_text = request.POST.get('quote_text', '').strip()
+            quote_author_id = request.POST.get('quote_author_id', '').strip()
+            if quote_text:
+                post.quote_text = quote_text
+                if quote_author_id:
+                    try:
+                        from django.contrib.auth.models import User as UserModel
+                        qa = UserModel.objects.get(pk=int(quote_author_id))
+                        post.quote_author = qa
+                        # Add quoted author as member so they get unread notification
+                        if qa != blog.owner:
+                            blog.members.add(qa)
+                    except (UserModel.DoesNotExist, ValueError):
+                        pass
+                post.save()
 
             # Mark blog as read for the author at the post's timestamp
             from django.utils import timezone
@@ -414,8 +431,16 @@ def post_create(request, blog_pk):
     else:
         form = PostForm()
 
+    # Pre-fill quote from URL params (set by JS tooltip)
+    quote_text = request.GET.get('quote', '')
+    quote_author_id = request.GET.get('author_id', '')
+
     return render(request, 'blogapp/post/form.html', {
-        'form': form, 'blog': blog, 'action': 'Save'
+        'form': form,
+        'blog': blog,
+        'action': 'Save',
+        'quote_text': quote_text,
+        'quote_author_id': quote_author_id,
     })
 
 

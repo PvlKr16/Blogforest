@@ -30,7 +30,8 @@
   {% endif %}
 
   {% if blog.body %}
-  <div class="card" style="padding:24px 28px; margin-bottom:28px; font-size:1rem; line-height:1.8;">
+  <div class="card quote-source" data-author-id="{{ blog.owner.pk }}"
+       style="padding:24px 28px; margin-bottom:28px; font-size:1rem; line-height:1.8;">
     {{ blog.body|linebreaks }}
   </div>
   {% endif %}
@@ -115,8 +116,11 @@
             {% endif %}
           </div>
         </div>
-        <div class="card-body">
+        <div class="card-body quote-source" data-author-id="{{ post.author.pk }}">
           {% if post.title %}<h3 class="post-card-title">{{ post.title }}</h3>{% endif %}
+          {% if post.quote_text %}
+          <blockquote class="quote-block" style="margin-bottom:10px;">{{ post.quote_text }}</blockquote>
+          {% endif %}
           <p class="post-card-excerpt">{{ post.content|truncatewords:35 }}</p>
 {% comment %}Tags hidden{% endcomment %}
           {% with post_files=post.files.all %}

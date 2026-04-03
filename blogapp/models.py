@@ -140,6 +140,12 @@ class Post(models.Model):
     )
     title = models.CharField(max_length=300, blank=True, default='')
     content = models.TextField()
+    quote_text = models.TextField(blank=True, default='')   # cited fragment
+    quote_author = models.ForeignKey(                        # author of quoted text
+        User, on_delete=models.SET_NULL,
+        null=True, blank=True,
+        related_name='quoted_in_posts',
+    )
     image = models.ImageField(upload_to=post_image_path, blank=True, null=True)
     tags = models.ManyToManyField(Tag, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
