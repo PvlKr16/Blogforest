@@ -9,11 +9,11 @@ from django.http import Http404, JsonResponse
 from django.core.paginator import Paginator
 from django.views.decorators.http import require_POST
 
-from .models import Blog, Post, Comment, Tag, PostFile, BlogFile, BlogRead
+from .models import Blog, Post, Comment, Tag, PostFile, BlogFile, BlogRead, Poll, PollOption, PollVote
 from .forms import (
     RegistrationForm, LoginForm, BlogForm, PostForm,
     CommentForm, SearchForm, AddMemberForm,
-    AvatarForm, PasswordChangeForm,
+    AvatarForm, PasswordChangeForm, PollForm,
     DEFAULT_SEARCH_SCOPES,
     SEARCH_IN_AUTHOR, SEARCH_IN_TITLE,
     SEARCH_IN_DESCRIPTION, SEARCH_IN_CONTENT, SEARCH_IN_COMMENTS,
@@ -243,6 +243,12 @@ def blog_detail(request, pk):
     if request.user.is_authenticated:
         add_member_form = AddMemberForm(blog=blog)
 
+    poll = getattr(blog, 'poll', None)
+    poll_results = poll.results() if poll else []
+    user_has_voted = poll.user_has_voted(request.user) if poll else False
+    poll_closed = poll.is_closed() if poll else False
+    can_vote = blog.can_view(request.user) and request.user.is_authenticated
+
     return render(request, 'blogapp/blog/detail.html', {
         'blog': blog,
         'posts': posts_page,
@@ -252,6 +258,11 @@ def blog_detail(request, pk):
         'is_member': is_member,
         'add_member_form': add_member_form,
         'sort': sort,
+        'poll': poll,
+        'poll_results': poll_results,
+        'user_has_voted': user_has_voted,
+        'poll_closed': poll_closed,
+        'can_vote': can_vote,
     })
 
 
@@ -708,3 +719,110 @@ def profile(request, username):
         'avatar_form': avatar_form,
         'password_form': password_form,
     })
+
+
+# ─── Polls ────────────────────────────────────────────────────────────────────
+
+@login_required
+def poll_create(request):
+    """
+    Poll creating: Blog with prefix "Poll" is created with Poll connected
+    """
+    if request.method == 'POST':
+        form = PollForm(request.POST, request.FILES, owner=request.user)
+
+        # Gathering options: fields option_text_0, option_text_1, …
+        option_texts = [
+            v.strip()
+            for k, v in request.POST.items()
+            if k.startswith('option_text_') and v.strip()
+        ]
+
+        if form.is_valid():
+            if len(option_texts) < 2:
+                form.add_error(None, 'Please add at least two answer options.')
+            else:
+                from django.utils import timezone
+
+                # 1. Topic creating (Blog)
+                title = form.cleaned_data['title']
+                blog = Blog.objects.create(
+                    title=f'Опрос: {title}',
+                    description=form.cleaned_data.get('description', ''),
+                    body='',
+                    owner=request.user,
+                    is_public=form.cleaned_data.get('is_public', True),
+                )
+                for m in (form.cleaned_data.get('members') or []):
+                    blog.members.add(m)
+
+                # 2. Creating Poll
+                poll = Poll.objects.create(
+                    blog=blog,
+                    question=form.cleaned_data['question'],
+                    is_anonymous=form.cleaned_data.get('is_anonymous', False),
+                    multiple_choice=form.cleaned_data.get('multiple_choice', False),
+                )
+                if form.cleaned_data.get('question_file'):
+                    poll.question_file = form.cleaned_data['question_file']
+                    poll.save()
+
+                # 3. Answer variants
+                for i, text in enumerate(option_texts):
+                    PollOption.objects.create(poll=poll, text=text, order=i)
+
+                # 4. Topic is marked as read for the owner
+                BlogRead.objects.update_or_create(
+                    user=request.user, blog=blog,
+                    defaults={'last_read_at': timezone.now()}
+                )
+
+                messages.success(request, 'Poll created successfully!')
+                return redirect('blog_detail', pk=blog.pk)
+    else:
+        form = PollForm(owner=request.user)
+
+    return render(request, 'blogapp/poll/form.html', {'form': form})
+
+
+@login_required
+@require_POST
+def poll_vote(request, poll_pk):
+    """Takes user's vote and redirects to topic's page"""
+    poll = get_object_or_404(Poll, pk=poll_pk)
+    blog = poll.blog
+
+    if not blog.can_view(request.user):
+        raise Http404
+
+    if poll.user_has_voted(request.user):
+        messages.warning(request, 'You have already voted in this poll.')
+        return redirect('blog_detail', pk=blog.pk)
+
+    if poll.is_closed():
+        messages.warning(request, 'This poll is already closed.')
+        return redirect('blog_detail', pk=blog.pk)
+
+    selected_ids = request.POST.getlist('option')
+    if not selected_ids:
+        messages.error(request, 'Please select at least one option.')
+        return redirect('blog_detail', pk=blog.pk)
+
+    if not poll.multiple_choice and len(selected_ids) > 1:
+        messages.error(request, 'This poll allows only one answer.')
+        return redirect('blog_detail', pk=blog.pk)
+
+    options = PollOption.objects.filter(poll=poll, pk__in=selected_ids)
+    if not options.exists():
+        messages.error(request, 'Invalid option selected.')
+        return redirect('blog_detail', pk=blog.pk)
+
+    for option in options:
+        PollVote.objects.get_or_create(poll=poll, user=request.user, option=option)
+
+    # Voted person is added to participants
+    if request.user != blog.owner:
+        blog.members.add(request.user)
+
+    messages.success(request, 'Your vote has been recorded.')
+    return redirect('blog_detail', pk=blog.pk)

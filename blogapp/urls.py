@@ -29,9 +29,6 @@ urlpatterns = [
     path('blog-files/<int:file_pk>/delete/', views.blog_delete_file, name='blog_delete_file'),
 
     # Unread
-
-    # Unread
-
     path('unread/', views.unread_blogs, name='unread_blogs'),
     path('api/unread-count/', views.unread_count_api, name='unread_count_api'),
     path('blogs/<int:pk>/mark-unread/', views.mark_unread, name='mark_unread'),
@@ -44,4 +41,8 @@ urlpatterns = [
     # Users & notifications
     path('users/', views.user_list, name='user_list'),
     path('user/<str:username>/', views.profile, name='profile'),
+
+    # Polls
+    path('polls/create/', views.poll_create, name='poll_create'),
+    path('polls/<int:poll_pk>/vote/', views.poll_vote, name='poll_vote'),
 ]

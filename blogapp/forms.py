@@ -2,7 +2,7 @@ from django import forms
 from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
 from django.contrib.auth.models import User
 from django.conf import settings
-from .models import Blog, Post, Comment, Tag, PostFile, UserProfile
+from .models import Blog, Post, Comment, Tag, PostFile, UserProfile, Poll, PollOption
 
 
 class MultipleFileInput(forms.FileInput):
@@ -298,3 +298,81 @@ class PasswordChangeForm(forms.Form):
     def save(self):
         self.user.set_password(self.cleaned_data['new_password'])
         self.user.save()
+
+
+class PollForm(forms.Form):
+    """
+    Single form for Poll creating.
+    Variants of answers are provided as fields option_text_0, option_text_1, …
+    and collected in poll_create view.
+    """
+    # ── Topic settings ────────────────────────────────────────────────────────
+    title = forms.CharField(
+        max_length=200,
+        label='Title',
+        widget=forms.TextInput(attrs={
+            'class': 'form-control',
+            'placeholder': 'Poll topic title',
+        }),
+    )
+    description = forms.CharField(
+        required=False,
+        label='Description',
+        widget=forms.Textarea(attrs={
+            'class': 'form-control', 'rows': 2,
+            'placeholder': 'Short description (optional)',
+        }),
+    )
+    is_public = forms.BooleanField(
+        required=False,
+        label='Public poll (visible to everyone)',
+        widget=forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+    )
+    members = forms.ModelMultipleChoiceField(
+        queryset=User.objects.none(),
+        required=False,
+        label='Members',
+        widget=forms.CheckboxSelectMultiple(attrs={'class': 'member-checkbox'}),
+    )
+
+    # ── Question ────────────────────────────────────────────────────────────────
+    question = forms.CharField(
+        label='Question',
+        widget=forms.Textarea(attrs={
+            'class': 'form-control', 'rows': 3,
+            'placeholder': 'Your question...',
+        }),
+    )
+    question_file = forms.FileField(
+        required=False,
+        label='Attach file to question',
+        widget=forms.FileInput(attrs={'class': 'form-control'}),
+    )
+
+    # ── Poll settings ──────────────────────────────────────────────────────
+    is_anonymous = forms.BooleanField(
+        required=False,
+        label='Anonymous poll (names of voters are hidden)',
+        widget=forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+    )
+    multiple_choice = forms.BooleanField(
+        required=False,
+        label='Allow multiple answers',
+        widget=forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+    )
+
+    def __init__(self, *args, owner=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        if owner:
+            self.fields['members'].queryset = User.objects.exclude(pk=owner.pk)
+
+    def clean_question_file(self):
+        f = self.cleaned_data.get('question_file')
+        if f and hasattr(f, 'size'):
+            from django.conf import settings as dj_settings
+            limit = getattr(dj_settings, 'MAX_UPLOAD_SIZE', 5 * 1024 * 1024)
+            if f.size > limit:
+                raise forms.ValidationError(
+                    f'File exceeds the allowed size of {limit // (1024 * 1024)} MB.'
+                )
+        return f

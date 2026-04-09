@@ -90,6 +90,7 @@
           {% if not user.profile.is_guest %}
           <a href="{% url 'user_list' %}" class="nav-link">Contacts</a>
           <a href="{% url 'blog_create' %}" class="nav-link">+ New topic</a>
+          <a href="{% url 'poll_create' %}" class="nav-link">Create Poll</a>
           {% endif %}
           {% if user.is_staff %}
           <a href="{% url 'register' %}" class="nav-link">+ User</a>

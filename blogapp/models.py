@@ -270,3 +270,95 @@ def get_unread_blogs(user):
     )
 
     return blogs
+
+
+class Poll(models.Model):
+    """
+    Poll is connected to Blog as one-to-one relationship.
+    In topics list Poll is marked with "Poll" text
+    it's added in poll_create view.
+    """
+    blog = models.OneToOneField(
+        Blog, on_delete=models.CASCADE, related_name='poll', verbose_name='Topic',
+    )
+    question = models.TextField(verbose_name='Question')
+    question_file = models.FileField(
+        upload_to='poll_files/',
+        blank=True, null=True,
+        verbose_name='Attached file',
+    )
+    is_anonymous = models.BooleanField(default=False, verbose_name='Anonymous poll')
+    multiple_choice = models.BooleanField(default=False, verbose_name='Multiple answers allowed')
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = 'Poll'
+        verbose_name_plural = 'Polls'
+
+    def __str__(self):
+        return f'Poll: {self.blog.title}'
+
+    def total_votes(self):
+        """Number of unique users that voted"""
+        return self.votes.values('user').distinct().count()
+
+    def is_closed(self):
+        """
+        Poll is over when all participants voted
+        """
+        members = set(self.blog.members.values_list('pk', flat=True))
+        members.add(self.blog.owner_id)
+        voted = set(self.votes.values_list('user_id', flat=True).distinct())
+        return members.issubset(voted)
+
+    def user_has_voted(self, user):
+        if not user.is_authenticated:
+            return False
+        return self.votes.filter(user=user).exists()
+
+    def results(self):
+        """
+        Returns list of dictionaries for results rendering:
+        [{'option': PollOption, 'count': int, 'percent': float}, ...]
+        """
+        total = self.total_votes()
+        data = []
+        for option in self.options.all():
+            count = option.votes.count()
+            percent = round(count / total * 100, 1) if total else 0
+            data.append({'option': option, 'count': count, 'percent': percent})
+        return data
+
+
+class PollOption(models.Model):
+    poll = models.ForeignKey(Poll, on_delete=models.CASCADE, related_name='options')
+    text = models.CharField(max_length=500, verbose_name='Option text')
+    order = models.PositiveIntegerField(default=0)
+
+    class Meta:
+        verbose_name = 'Poll option'
+        verbose_name_plural = 'Poll options'
+        ordering = ['order', 'id']
+
+    def __str__(self):
+        return self.text
+
+
+class PollVote(models.Model):
+    poll = models.ForeignKey(Poll, on_delete=models.CASCADE, related_name='votes')
+    option = models.ForeignKey(PollOption, on_delete=models.CASCADE, related_name='votes')
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='poll_votes')
+    voted_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = 'Poll vote'
+        verbose_name_plural = 'Poll votes'
+        constraints = [
+            models.UniqueConstraint(
+                fields=['poll', 'user', 'option'],
+                name='unique_poll_user_option',
+            )
+        ]
+
+    def __str__(self):
+        return f'{self.user.username} → {self.option.text}'

@@ -1,0 +1,190 @@
+{% extends "blogapp/base.html" %}
+{% block title %}Create Poll{% endblock %}
+
+{% block content %}
+<div class="container py-4" style="max-width: 720px;">
+  <h2 class="mb-4">Create Poll</h2>
+
+  <form method="post" enctype="multipart/form-data" id="poll-form">
+    {% csrf_token %}
+
+    {% if form.non_field_errors %}
+      <div class="alert alert-danger">
+        {% for e in form.non_field_errors %}{{ e }}{% endfor %}
+      </div>
+    {% endif %}
+
+    {# Topic block #}
+    <div class="card mb-4">
+      <div class="card-header fw-semibold">Topic settings</div>
+      <div class="card-body">
+
+        <div class="mb-3">
+          <label class="form-label" for="{{ form.title.id_for_label }}">{{ form.title.label }}</label>
+          {{ form.title }}
+          {% if form.title.errors %}<div class="text-danger small mt-1">{{ form.title.errors }}</div>{% endif %}
+          <div class="form-text">The topic will be listed as <em>«Опрос: &lt;title&gt;»</em></div>
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label" for="{{ form.description.id_for_label }}">{{ form.description.label }}</label>
+          {{ form.description }}
+        </div>
+
+        <div class="mb-3 form-check">
+          {{ form.is_public }}
+          <label class="form-check-label" for="{{ form.is_public.id_for_label }}">{{ form.is_public.label }}</label>
+        </div>
+
+        <div class="mb-1">
+          <label class="form-label">{{ form.members.label }}</label>
+          <div class="border rounded p-2" style="max-height:160px;overflow-y:auto;">
+            {% for cb in form.members %}
+              <div class="form-check">
+                {{ cb.tag }}
+                <label class="form-check-label" for="{{ cb.id_for_label }}">{{ cb.choice_label }}</label>
+              </div>
+            {% empty %}
+              <span class="text-muted small">No other users to add.</span>
+            {% endfor %}
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    {# Question block #}
+    <div class="card mb-4">
+      <div class="card-header fw-semibold">Question</div>
+      <div class="card-body">
+
+        <div class="mb-3">
+          <label class="form-label" for="{{ form.question.id_for_label }}">{{ form.question.label }}</label>
+          {{ form.question }}
+          {% if form.question.errors %}<div class="text-danger small mt-1">{{ form.question.errors }}</div>{% endif %}
+        </div>
+
+        <div class="mb-1">
+          <label class="form-label" for="{{ form.question_file.id_for_label }}">{{ form.question_file.label }}</label>
+          {{ form.question_file }}
+          {% if form.question_file.errors %}<div class="text-danger small mt-1">{{ form.question_file.errors }}</div>{% endif %}
+        </div>
+
+      </div>
+    </div>
+
+    {# Variants of answer block #}
+    <div class="card mb-4">
+      <div class="card-header fw-semibold">Answer options</div>
+      <div class="card-body">
+
+        <div id="options-container">
+          <div class="option-row mb-2 d-flex gap-2 align-items-center">
+            <input type="text" name="option_text_0" class="form-control"
+                   placeholder="Option 1" required>
+            <button type="button" class="btn btn-sm btn-outline-danger remove-option"
+                    style="display:none;" title="Remove option">✕</button>
+          </div>
+          <div class="option-row mb-2 d-flex gap-2 align-items-center">
+            <input type="text" name="option_text_1" class="form-control"
+                   placeholder="Option 2" required>
+            <button type="button" class="btn btn-sm btn-outline-danger remove-option"
+                    style="display:none;" title="Remove option">✕</button>
+          </div>
+        </div>
+
+        <button type="button" class="btn btn-outline-secondary btn-sm mt-2" id="add-option">
+          + Add another option
+        </button>
+        <div id="options-error" class="text-danger small mt-1" style="display:none;">
+          At least two options are required.
+        </div>
+
+      </div>
+    </div>
+
+    {# Voting settings block #}
+    <div class="card mb-4">
+      <div class="card-header fw-semibold">Voting settings</div>
+      <div class="card-body">
+
+        <div class="mb-3 form-check">
+          {{ form.is_anonymous }}
+          <label class="form-check-label" for="{{ form.is_anonymous.id_for_label }}">
+            {{ form.is_anonymous.label }}
+          </label>
+          <div class="form-text text-muted">
+            In an anonymous poll only totals are shown — voter names stay hidden.
+          </div>
+        </div>
+
+        <div class="form-check">
+          {{ form.multiple_choice }}
+          <label class="form-check-label" for="{{ form.multiple_choice.id_for_label }}">
+            {{ form.multiple_choice.label }}
+          </label>
+          <div class="form-text text-muted">
+            If unchecked, each participant may choose only one answer.
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <div class="d-flex gap-2 align-items-center">
+      <button type="submit" class="btn btn-primary px-4">Save poll</button>
+      <a href="{% url 'home' %}" class="btn btn-link">Cancel</a>
+    </div>
+  </form>
+</div>
+
+<script>
+(function () {
+  const container = document.getElementById('options-container');
+  const addBtn    = document.getElementById('add-option');
+  let counter     = 2;
+
+  function updateRemoveButtons() {
+    const rows = container.querySelectorAll('.option-row');
+    rows.forEach(row => {
+      row.querySelector('.remove-option').style.display =
+        rows.length > 2 ? 'inline-flex' : 'none';
+    });
+  }
+
+  addBtn.addEventListener('click', function () {
+    const row = document.createElement('div');
+    row.className = 'option-row mb-2 d-flex gap-2 align-items-center';
+    row.innerHTML =
+      `<input type="text" name="option_text_${counter}" class="form-control"
+              placeholder="Option ${counter + 1}">` +
+      `<button type="button" class="btn btn-sm btn-outline-danger remove-option"
+               title="Remove option">✕</button>`;
+    container.appendChild(row);
+    counter++;
+    updateRemoveButtons();
+    row.querySelector('input').focus();
+  });
+
+  container.addEventListener('click', function (e) {
+    if (e.target.classList.contains('remove-option')) {
+      e.target.closest('.option-row').remove();
+      updateRemoveButtons();
+    }
+  });
+
+  document.getElementById('poll-form').addEventListener('submit', function (e) {
+    const filled = Array.from(container.querySelectorAll('input[type="text"]'))
+                        .filter(inp => inp.value.trim() !== '');
+    const errEl = document.getElementById('options-error');
+    if (filled.length < 2) {
+      e.preventDefault();
+      errEl.style.display = 'block';
+      errEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    } else {
+      errEl.style.display = 'none';
+    }
+  });
+})();
+</script>
+{% endblock %}

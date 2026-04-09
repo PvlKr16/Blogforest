@@ -1,0 +1,97 @@
+<div class="card mb-4" id="poll-widget">
+  <div class="card-header d-flex flex-wrap align-items-center gap-2">
+    <span class="badge bg-secondary">Poll</span>
+    <span class="fw-semibold flex-grow-1">{{ poll.question }}</span>
+    {% if poll.is_anonymous %}
+      <span class="badge bg-light border text-muted" title="Votes are anonymous">🔒 Anonymous</span>
+    {% endif %}
+    {% if poll_closed %}
+      <span class="badge bg-success">Closed</span>
+    {% endif %}
+  </div>
+
+  {% if poll.question_file %}
+    <div class="px-3 pt-2 pb-0">
+      <a href="{{ poll.question_file.url }}" target="_blank" class="small text-decoration-none">
+        📎 {{ poll.question_file.name|cut:"poll_files/" }}
+      </a>
+    </div>
+  {% endif %}
+
+  <div class="card-body">
+
+    {# Voting form #}
+    {% if not user_has_voted and not poll_closed and can_vote %}
+      <form method="post" action="{% url 'poll_vote' poll.pk %}">
+        {% csrf_token %}
+
+        <fieldset class="mb-3">
+          <legend class="visually-hidden">Choose your answer</legend>
+          {% for option in poll.options.all %}
+            <div class="form-check mb-2">
+              {% if poll.multiple_choice %}
+                <input class="form-check-input" type="checkbox"
+                       name="option" value="{{ option.pk }}" id="opt_{{ option.pk }}">
+              {% else %}
+                <input class="form-check-input" type="radio"
+                       name="option" value="{{ option.pk }}" id="opt_{{ option.pk }}">
+              {% endif %}
+              <label class="form-check-label" for="opt_{{ option.pk }}">
+                {{ option.text }}
+              </label>
+            </div>
+          {% endfor %}
+        </fieldset>
+
+        <button type="submit" class="btn btn-primary btn-sm">Vote</button>
+        <span class="text-muted small ms-3">
+          {% if poll.multiple_choice %}Multiple answers allowed{% else %}One answer only{% endif %}
+        </span>
+      </form>
+
+    {# Results #}
+    {% else %}
+      {% if user_has_voted and not poll_closed %}
+        <p class="text-muted small mb-3">You have already voted. Final results will be shown when all members vote.</p>
+      {% endif %}
+
+      {% for row in poll_results %}
+        <div class="mb-3">
+          <div class="d-flex justify-content-between small mb-1">
+            <span>{{ row.option.text }}</span>
+            <span class="text-muted">
+              {{ row.count }} vote{{ row.count|pluralize }} &mdash; {{ row.percent }}%
+            </span>
+          </div>
+          <div class="progress" style="height: 20px; border-radius: 4px;">
+            <div class="progress-bar" role="progressbar"
+                 style="width: {{ row.percent }}%; transition: width .4s ease;"
+                 aria-valuenow="{{ row.percent }}" aria-valuemin="0" aria-valuemax="100">
+              {% if row.percent >= 12 %}{{ row.percent }}%{% endif %}
+            </div>
+          </div>
+
+          {# Voted names - for open poll #}
+          {% if not poll.is_anonymous %}
+            {% with voters=row.option.votes.all %}
+              {% if voters %}
+                <div class="small text-muted mt-1">
+                  {% for vote in voters %}
+                    <a href="{% url 'profile' vote.user.username %}"
+                       class="text-decoration-none me-1">{{ vote.user.username }}</a>{% if not forloop.last %},{% endif %}
+                  {% endfor %}
+                </div>
+              {% endif %}
+            {% endwith %}
+          {% endif %}
+        </div>
+      {% endfor %}
+
+      <hr class="my-2">
+      <div class="text-muted small">
+        Total unique voters: <strong>{{ poll.total_votes }}</strong>
+      </div>
+    {% endif %}
+
+  </div>{# /card-body #}
+</div>
