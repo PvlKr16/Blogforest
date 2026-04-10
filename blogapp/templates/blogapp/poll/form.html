@@ -2,189 +2,165 @@
 {% block title %}Create Poll{% endblock %}
 
 {% block content %}
-<div class="container py-4" style="max-width: 720px;">
-  <h2 class="mb-4">Create Poll</h2>
-
-  <form method="post" enctype="multipart/form-data" id="poll-form">
-    {% csrf_token %}
-
-    {% if form.non_field_errors %}
-      <div class="alert alert-danger">
-        {% for e in form.non_field_errors %}{{ e }}{% endfor %}
-      </div>
-    {% endif %}
-
-    {# Topic block #}
-    <div class="card mb-4">
-      <div class="card-header fw-semibold">Topic settings</div>
-      <div class="card-body">
-
-        <div class="mb-3">
-          <label class="form-label" for="{{ form.title.id_for_label }}">{{ form.title.label }}</label>
-          {{ form.title }}
-          {% if form.title.errors %}<div class="text-danger small mt-1">{{ form.title.errors }}</div>{% endif %}
-          <div class="form-text">The topic will be listed as <em>«Опрос: &lt;title&gt;»</em></div>
-        </div>
-
-        <div class="mb-3">
-          <label class="form-label" for="{{ form.description.id_for_label }}">{{ form.description.label }}</label>
-          {{ form.description }}
-        </div>
-
-        <div class="mb-3 form-check">
-          {{ form.is_public }}
-          <label class="form-check-label" for="{{ form.is_public.id_for_label }}">{{ form.is_public.label }}</label>
-        </div>
-
-        <div class="mb-1">
-          <label class="form-label">{{ form.members.label }}</label>
-          <div class="border rounded p-2" style="max-height:160px;overflow-y:auto;">
-            {% for cb in form.members %}
-              <div class="form-check">
-                {{ cb.tag }}
-                <label class="form-check-label" for="{{ cb.id_for_label }}">{{ cb.choice_label }}</label>
-              </div>
-            {% empty %}
-              <span class="text-muted small">No other users to add.</span>
-            {% endfor %}
-          </div>
-        </div>
-
-      </div>
-    </div>
-
-    {# Question block #}
-    <div class="card mb-4">
-      <div class="card-header fw-semibold">Question</div>
-      <div class="card-body">
-
-        <div class="mb-3">
-          <label class="form-label" for="{{ form.question.id_for_label }}">{{ form.question.label }}</label>
-          {{ form.question }}
-          {% if form.question.errors %}<div class="text-danger small mt-1">{{ form.question.errors }}</div>{% endif %}
-        </div>
-
-        <div class="mb-1">
-          <label class="form-label" for="{{ form.question_file.id_for_label }}">{{ form.question_file.label }}</label>
-          {{ form.question_file }}
-          {% if form.question_file.errors %}<div class="text-danger small mt-1">{{ form.question_file.errors }}</div>{% endif %}
-        </div>
-
-      </div>
-    </div>
-
-    {# Variants of answer block #}
-    <div class="card mb-4">
-      <div class="card-header fw-semibold">Answer options</div>
-      <div class="card-body">
-
-        <div id="options-container">
-          <div class="option-row mb-2 d-flex gap-2 align-items-center">
-            <input type="text" name="option_text_0" class="form-control"
-                   placeholder="Option 1" required>
-            <button type="button" class="btn btn-sm btn-outline-danger remove-option"
-                    style="display:none;" title="Remove option">✕</button>
-          </div>
-          <div class="option-row mb-2 d-flex gap-2 align-items-center">
-            <input type="text" name="option_text_1" class="form-control"
-                   placeholder="Option 2" required>
-            <button type="button" class="btn btn-sm btn-outline-danger remove-option"
-                    style="display:none;" title="Remove option">✕</button>
-          </div>
-        </div>
-
-        <button type="button" class="btn btn-outline-secondary btn-sm mt-2" id="add-option">
-          + Add another option
-        </button>
-        <div id="options-error" class="text-danger small mt-1" style="display:none;">
-          At least two options are required.
-        </div>
-
-      </div>
-    </div>
-
-    {# Voting settings block #}
-    <div class="card mb-4">
-      <div class="card-header fw-semibold">Voting settings</div>
-      <div class="card-body">
-
-        <div class="mb-3 form-check">
-          {{ form.is_anonymous }}
-          <label class="form-check-label" for="{{ form.is_anonymous.id_for_label }}">
-            {{ form.is_anonymous.label }}
-          </label>
-          <div class="form-text text-muted">
-            In an anonymous poll only totals are shown — voter names stay hidden.
-          </div>
-        </div>
-
-        <div class="form-check">
-          {{ form.multiple_choice }}
-          <label class="form-check-label" for="{{ form.multiple_choice.id_for_label }}">
-            {{ form.multiple_choice.label }}
-          </label>
-          <div class="form-text text-muted">
-            If unchecked, each participant may choose only one answer.
-          </div>
-        </div>
-
-      </div>
-    </div>
-
-    <div class="d-flex gap-2 align-items-center">
-      <button type="submit" class="btn btn-primary px-4">Save poll</button>
-      <a href="{% url 'home' %}" class="btn btn-link">Cancel</a>
-    </div>
-  </form>
+<div class="page-hero">
+  <div class="container">
+    <h1>Create Poll</h1>
+  </div>
 </div>
 
-<script>
-(function () {
-  const container = document.getElementById('options-container');
-  const addBtn    = document.getElementById('add-option');
-  let counter     = 2;
+<div class="container content-full">
+  <div style="max-width:720px; margin:0 auto;">
+    <form method="post" enctype="multipart/form-data" id="poll-form">
+      {% csrf_token %}
 
-  function updateRemoveButtons() {
-    const rows = container.querySelectorAll('.option-row');
-    rows.forEach(row => {
-      row.querySelector('.remove-option').style.display =
-        rows.length > 2 ? 'inline-flex' : 'none';
-    });
-  }
+      {% if form.non_field_errors %}
+        <div class="card" style="border-color:#f5c2c0; margin-bottom:16px;">
+          <div class="card-body" style="color:#c0392b;">
+            {% for e in form.non_field_errors %}{{ e }}{% endfor %}
+          </div>
+        </div>
+      {% endif %}
 
-  addBtn.addEventListener('click', function () {
-    const row = document.createElement('div');
-    row.className = 'option-row mb-2 d-flex gap-2 align-items-center';
-    row.innerHTML =
-      `<input type="text" name="option_text_${counter}" class="form-control"
-              placeholder="Option ${counter + 1}">` +
-      `<button type="button" class="btn btn-sm btn-outline-danger remove-option"
-               title="Remove option">✕</button>`;
-    container.appendChild(row);
-    counter++;
-    updateRemoveButtons();
-    row.querySelector('input').focus();
-  });
+      {# ── Блок «тема» ───────────────────────────────────────────────────── #}
+      <div class="card" style="margin-bottom:20px;">
+        <div class="card-body">
+          <h3 style="font-size:1rem; font-weight:600; margin-bottom:16px;">Topic settings</h3>
 
-  container.addEventListener('click', function (e) {
-    if (e.target.classList.contains('remove-option')) {
-      e.target.closest('.option-row').remove();
-      updateRemoveButtons();
-    }
-  });
+          <div class="form-group">
+            <label class="form-label" for="{{ form.title.id_for_label }}">{{ form.title.label }}</label>
+            {{ form.title }}
+            {% if form.title.errors %}<ul class="errorlist">{% for e in form.title.errors %}<li>{{ e }}</li>{% endfor %}</ul>{% endif %}
+            <div class="form-text">The topic will be listed as <em>«Опрос: &lt;title&gt;»</em></div>
+          </div>
 
-  document.getElementById('poll-form').addEventListener('submit', function (e) {
-    const filled = Array.from(container.querySelectorAll('input[type="text"]'))
-                        .filter(inp => inp.value.trim() !== '');
-    const errEl = document.getElementById('options-error');
-    if (filled.length < 2) {
-      e.preventDefault();
-      errEl.style.display = 'block';
-      errEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    } else {
-      errEl.style.display = 'none';
-    }
-  });
-})();
-</script>
+          <div class="form-group">
+            <label class="form-label" for="{{ form.description.id_for_label }}">{{ form.description.label }}</label>
+            {{ form.description }}
+          </div>
+
+          <div class="form-group">
+            <div class="form-check">
+              {{ form.is_public }}
+              <label for="{{ form.is_public.id_for_label }}" class="form-label mb-0" style="cursor:pointer;">
+                {{ form.is_public.label }}
+              </label>
+            </div>
+            <div class="form-text">Public polls are visible to everyone. Private — members only.</div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">{{ form.members.label }}</label>
+            <div class="member-checkbox-list">
+              {% for choice in form.members %}
+              <label>
+                {{ choice.tag }}
+                {{ choice.choice_label }}
+              </label>
+              {% empty %}
+              <p class="text-muted text-sm">No other users.</p>
+              {% endfor %}
+            </div>
+            <div class="form-text">Selected users will be able to see and vote in this poll.</div>
+          </div>
+
+        </div>
+      </div>
+
+      {# ── Блок «вопрос» ─────────────────────────────────────────────────── #}
+      <div class="card" style="margin-bottom:20px;">
+        <div class="card-body">
+          <h3 style="font-size:1rem; font-weight:600; margin-bottom:16px;">Question</h3>
+
+          <div class="form-group">
+            <label class="form-label" for="{{ form.question.id_for_label }}">{{ form.question.label }}</label>
+            {{ form.question }}
+            {% if form.question.errors %}<ul class="errorlist">{% for e in form.question.errors %}<li>{{ e }}</li>{% endfor %}</ul>{% endif %}
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Attachments</label>
+            <!-- Desktop: drag & drop zone -->
+            <div class="dropzone dropzone-desktop" id="dropzone-poll">
+              <div class="dropzone-icon">📎</div>
+              <div class="dropzone-text">Drag files here or <span class="dropzone-link">click to choose</span></div>
+              <div class="dropzone-hint">Any file type · Max 5 MB per file · Multiple files allowed</div>
+              <input type="file" name="poll_files" id="poll_files" class="dropzone-input" multiple>
+            </div>
+            <div class="dropzone-file-list dropzone-desktop" id="dropzone-poll-list"></div>
+            <!-- Mobile: plain file input -->
+            <input type="file" name="poll_files" class="form-control dropzone-mobile" multiple>
+            <div class="form-text dropzone-mobile">Any file type · Max 5 MB per file · Multiple files allowed</div>
+          </div>
+
+        </div>
+      </div>
+
+      {# ── Блок «варианты ответов» ───────────────────────────────────────── #}
+      <div class="card" style="margin-bottom:20px;">
+        <div class="card-body">
+          <h3 style="font-size:1rem; font-weight:600; margin-bottom:16px;">Answer options</h3>
+
+          <div id="options-container">
+            <div class="option-row" style="display:flex; gap:8px; align-items:center; margin-bottom:8px;">
+              <input type="text" name="option_text_0" class="form-control"
+                     placeholder="Option 1" required>
+              <button type="button" class="btn btn-ghost btn-sm remove-option"
+                      style="display:none; color:#c0392b; border-color:#f5c2c0; flex-shrink:0;"
+                      title="Remove option">✕</button>
+            </div>
+            <div class="option-row" style="display:flex; gap:8px; align-items:center; margin-bottom:8px;">
+              <input type="text" name="option_text_1" class="form-control"
+                     placeholder="Option 2" required>
+              <button type="button" class="btn btn-ghost btn-sm remove-option"
+                      style="display:none; color:#c0392b; border-color:#f5c2c0; flex-shrink:0;"
+                      title="Remove option">✕</button>
+            </div>
+          </div>
+
+          <button type="button" class="btn btn-outline btn-sm" id="add-option" style="margin-top:4px;">
+            + Add another option
+          </button>
+          <div id="options-error" class="form-text" style="display:none; color:#c0392b;">
+            At least two options are required.
+          </div>
+
+        </div>
+      </div>
+
+      {# ── Блок «настройки голосования» ──────────────────────────────────── #}
+      <div class="card" style="margin-bottom:24px;">
+        <div class="card-body">
+          <h3 style="font-size:1rem; font-weight:600; margin-bottom:16px;">Voting settings</h3>
+
+          <div class="form-group">
+            <div class="form-check">
+              {{ form.is_anonymous }}
+              <label for="{{ form.is_anonymous.id_for_label }}" class="form-label mb-0" style="cursor:pointer;">
+                {{ form.is_anonymous.label }}
+              </label>
+            </div>
+            <div class="form-text">In an anonymous poll only totals are shown — voter names stay hidden.</div>
+          </div>
+
+          <div class="form-group" style="margin-bottom:0;">
+            <div class="form-check">
+              {{ form.multiple_choice }}
+              <label for="{{ form.multiple_choice.id_for_label }}" class="form-label mb-0" style="cursor:pointer;">
+                {{ form.multiple_choice.label }}
+              </label>
+            </div>
+            <div class="form-text">If unchecked, each participant may choose only one answer.</div>
+          </div>
+
+        </div>
+      </div>
+
+      <div style="display:flex; gap:12px; flex-wrap:wrap;">
+        <button type="submit" class="btn btn-primary btn-lg">Save poll</button>
+        <a href="{% url 'home' %}" class="btn btn-ghost btn-lg">Cancel</a>
+      </div>
+
+    </form>
+  </div>
+</div>
 {% endblock %}

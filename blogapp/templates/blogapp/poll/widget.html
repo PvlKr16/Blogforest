@@ -10,17 +10,9 @@
     {% endif %}
   </div>
 
-  {% if poll.question_file %}
-    <div class="px-3 pt-2 pb-0">
-      <a href="{{ poll.question_file.url }}" target="_blank" class="small text-decoration-none">
-        📎 {{ poll.question_file.name|cut:"poll_files/" }}
-      </a>
-    </div>
-  {% endif %}
-
   <div class="card-body">
 
-    {# Voting form #}
+    {# ── Форма голосования ─────────────────────────────────────────────────── #}
     {% if not user_has_voted and not poll_closed and can_vote %}
       <form method="post" action="{% url 'poll_vote' poll.pk %}">
         {% csrf_token %}
@@ -49,7 +41,7 @@
         </span>
       </form>
 
-    {# Results #}
+    {# ── Результаты ────────────────────────────────────────────────────────── #}
     {% else %}
       {% if user_has_voted and not poll_closed %}
         <p class="text-muted small mb-3">You have already voted. Final results will be shown when all members vote.</p>
@@ -71,7 +63,7 @@
             </div>
           </div>
 
-          {# Voted names - for open poll #}
+          {# Имена проголосовавших — только для открытого опроса #}
           {% if not poll.is_anonymous %}
             {% with voters=row.option.votes.all %}
               {% if voters %}

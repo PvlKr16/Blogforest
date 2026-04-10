@@ -726,12 +726,13 @@ def profile(request, username):
 @login_required
 def poll_create(request):
     """
-    Poll creating: Blog with prefix "Poll" is created with Poll connected
+    Создание опроса: одновременно создаётся Blog (тема) с префиксом «Опрос:»
+    и привязанный к нему Poll с вариантами ответов.
     """
     if request.method == 'POST':
         form = PollForm(request.POST, request.FILES, owner=request.user)
 
-        # Gathering options: fields option_text_0, option_text_1, …
+        # Собираем варианты: поля option_text_0, option_text_1, …
         option_texts = [
             v.strip()
             for k, v in request.POST.items()
@@ -744,7 +745,7 @@ def poll_create(request):
             else:
                 from django.utils import timezone
 
-                # 1. Topic creating (Blog)
+                # 1. Создаём тему (Blog)
                 title = form.cleaned_data['title']
                 blog = Blog.objects.create(
                     title=f'Опрос: {title}',
@@ -756,22 +757,25 @@ def poll_create(request):
                 for m in (form.cleaned_data.get('members') or []):
                     blog.members.add(m)
 
-                # 2. Creating Poll
+                # 2. Создаём опрос (Poll)
                 poll = Poll.objects.create(
                     blog=blog,
                     question=form.cleaned_data['question'],
                     is_anonymous=form.cleaned_data.get('is_anonymous', False),
                     multiple_choice=form.cleaned_data.get('multiple_choice', False),
                 )
-                if form.cleaned_data.get('question_file'):
-                    poll.question_file = form.cleaned_data['question_file']
-                    poll.save()
+                # 2а. Файлы к вопросу — сохраняем как BlogFile темы
+                for f in request.FILES.getlist('poll_files'):
+                    if f.size > 5 * 1024 * 1024:
+                        messages.warning(request, f'File "{f.name}" skipped: exceeds the 5 MB limit.')
+                        continue
+                    BlogFile.objects.create(blog=blog, file=f, original_name=f.name, size=f.size)
 
-                # 3. Answer variants
+                # 3. Варианты ответов
                 for i, text in enumerate(option_texts):
                     PollOption.objects.create(poll=poll, text=text, order=i)
 
-                # 4. Topic is marked as read for the owner
+                # 4. Помечаем тему прочитанной для создателя
                 BlogRead.objects.update_or_create(
                     user=request.user, blog=blog,
                     defaults={'last_read_at': timezone.now()}
@@ -788,7 +792,7 @@ def poll_create(request):
 @login_required
 @require_POST
 def poll_vote(request, poll_pk):
-    """Takes user's vote and redirects to topic's page"""
+    """Принимает голос(а) пользователя и перенаправляет на страницу темы."""
     poll = get_object_or_404(Poll, pk=poll_pk)
     blog = poll.blog
 
@@ -820,7 +824,7 @@ def poll_vote(request, poll_pk):
     for option in options:
         PollVote.objects.get_or_create(poll=poll, user=request.user, option=option)
 
-    # Voted person is added to participants
+    # Авто-добавление голосующего в участники (чтобы мог следить за темой)
     if request.user != blog.owner:
         blog.members.add(request.user)
 

@@ -274,19 +274,16 @@ def get_unread_blogs(user):
 
 class Poll(models.Model):
     """
-    Poll is connected to Blog as one-to-one relationship.
-    In topics list Poll is marked with "Poll" text
-    it's added in poll_create view.
+    Опрос привязан к теме (Blog) как 1-to-1.
+    В списке тем блог отображается с префиксом «Опрос:» — он добавляется
+    при создании во вьюхе poll_create.
     """
     blog = models.OneToOneField(
-        Blog, on_delete=models.CASCADE, related_name='poll', verbose_name='Topic',
+        Blog, on_delete=models.CASCADE,
+        related_name='poll',
+        verbose_name='Topic',
     )
     question = models.TextField(verbose_name='Question')
-    question_file = models.FileField(
-        upload_to='poll_files/',
-        blank=True, null=True,
-        verbose_name='Attached file',
-    )
     is_anonymous = models.BooleanField(default=False, verbose_name='Anonymous poll')
     multiple_choice = models.BooleanField(default=False, verbose_name='Multiple answers allowed')
     created_at = models.DateTimeField(auto_now_add=True)
@@ -299,12 +296,13 @@ class Poll(models.Model):
         return f'Poll: {self.blog.title}'
 
     def total_votes(self):
-        """Number of unique users that voted"""
+        """Количество уникальных проголосовавших пользователей."""
         return self.votes.values('user').distinct().count()
 
     def is_closed(self):
         """
-        Poll is over when all participants voted
+        Опрос завершён, когда проголосовали все участники темы
+        (владелец + все члены).
         """
         members = set(self.blog.members.values_list('pk', flat=True))
         members.add(self.blog.owner_id)
@@ -318,7 +316,7 @@ class Poll(models.Model):
 
     def results(self):
         """
-        Returns list of dictionaries for results rendering:
+        Возвращает список словарей для рендеринга результатов:
         [{'option': PollOption, 'count': int, 'percent': float}, ...]
         """
         total = self.total_votes()

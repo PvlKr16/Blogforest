@@ -336,4 +336,59 @@ document.addEventListener('DOMContentLoaded', function () {
     initDropzone(dz, list);
   });
 
+  // ── Poll: динамические варианты ответов ───────────────────────
+  (function () {
+    const container = document.getElementById('options-container');
+    const addBtn    = document.getElementById('add-option');
+    if (!container || !addBtn) return;
+
+    let counter = container.querySelectorAll('.option-row').length;
+
+    function updateRemoveButtons() {
+      const rows = container.querySelectorAll('.option-row');
+      rows.forEach(row => {
+        row.querySelector('.remove-option').style.display =
+          rows.length > 2 ? 'inline-flex' : 'none';
+      });
+    }
+
+    addBtn.addEventListener('click', function () {
+      const row = document.createElement('div');
+      row.className = 'option-row';
+      row.style.cssText = 'display:flex; gap:8px; align-items:center; margin-bottom:8px;';
+      row.innerHTML =
+        '<input type="text" name="option_text_' + counter + '" class="form-control"' +
+        ' placeholder="Option ' + (counter + 1) + '">' +
+        '<button type="button" class="btn btn-ghost btn-sm remove-option"' +
+        ' style="color:#c0392b; border-color:#f5c2c0; flex-shrink:0;" title="Remove option">✕</button>';
+      container.appendChild(row);
+      counter++;
+      updateRemoveButtons();
+      row.querySelector('input').focus();
+    });
+
+    container.addEventListener('click', function (e) {
+      if (e.target.classList.contains('remove-option')) {
+        e.target.closest('.option-row').remove();
+        updateRemoveButtons();
+      }
+    });
+
+    const pollForm = document.getElementById('poll-form');
+    if (pollForm) {
+      pollForm.addEventListener('submit', function (e) {
+        const filled = Array.from(container.querySelectorAll('input[type="text"]'))
+                            .filter(inp => inp.value.trim() !== '');
+        const errEl = document.getElementById('options-error');
+        if (filled.length < 2) {
+          e.preventDefault();
+          errEl.style.display = 'block';
+          errEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        } else {
+          errEl.style.display = 'none';
+        }
+      });
+    }
+  })();
+
 });

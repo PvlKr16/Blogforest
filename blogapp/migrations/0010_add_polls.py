@@ -16,7 +16,6 @@ class Migration(migrations.Migration):
             fields=[
                 ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('question', models.TextField(verbose_name='Question')),
-                ('question_file', models.FileField(blank=True, null=True, upload_to='poll_files/', verbose_name='Attached file')),
                 ('is_anonymous', models.BooleanField(default=False, verbose_name='Anonymous poll')),
                 ('multiple_choice', models.BooleanField(default=False, verbose_name='Multiple answers allowed')),
                 ('created_at', models.DateTimeField(auto_now_add=True)),
