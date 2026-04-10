@@ -386,6 +386,96 @@ h1,h2,h3,h4,h5,h6 {
   border-radius: var(--radius-sm);
 }
 .nav-btn:hover { background: #ecfdf5; color: #064e3b !important; }
+/* ── + New dropdown ─────────────────────────────────────────── */
+.nav-new-wrap {
+  position: relative;
+}
+.nav-new-btn {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  color: rgba(255,255,255,.85);
+  font-size: .9rem;
+  padding: 6px 12px;
+  border-radius: var(--radius-sm);
+  border: none;
+  background: none;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background .18s, color .18s;
+  font-family: inherit;
+}
+.nav-new-btn:hover,
+.nav-new-wrap:focus-within .nav-new-btn {
+  background: rgba(255,255,255,.12);
+  color: #fff;
+}
+.nav-new-btn .nav-new-arrow {
+  font-size: .65rem;
+  opacity: .7;
+  transition: transform .18s;
+}
+.nav-new-wrap.open .nav-new-arrow { transform: rotate(180deg); }
+
+.nav-new-dropdown {
+  display: none;
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  min-width: 148px;
+  background: var(--surface-card);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-md);
+  padding: 6px;
+  z-index: 200;
+}
+.nav-new-wrap.open .nav-new-dropdown { display: block; }
+
+.nav-new-item {
+  display: block;
+  padding: 8px 12px;
+  border-radius: var(--radius-sm);
+  color: var(--text-primary);
+  font-size: .9rem;
+  white-space: nowrap;
+  transition: background .15s;
+}
+.nav-new-item:hover {
+  background: var(--accent-mist);
+  color: var(--accent-1);
+}
+
+/* Mobile: flatten into nav list */
+@media (max-width: 680px) {
+  .nav-new-wrap { width: 100%; }
+  .nav-new-btn {
+    width: 100%;
+    padding: 10px 12px;
+    font-size: 1rem;
+    justify-content: space-between;
+  }
+  .nav-new-dropdown {
+    position: static;
+    box-shadow: none;
+    border: none;
+    border-left: 2px solid var(--accent-pale);
+    border-radius: 0;
+    padding: 0 0 4px 12px;
+    background: transparent;
+    margin-top: 2px;
+  }
+  .nav-new-item {
+    color: rgba(255,255,255,.8);
+    font-size: .95rem;
+    padding: 8px 12px;
+  }
+  .nav-new-item:hover {
+    background: rgba(255,255,255,.1);
+    color: #fff;
+  }
+}
+
 
 /* Mobile menu toggle */
 .burger {

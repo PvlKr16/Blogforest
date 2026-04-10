@@ -89,11 +89,18 @@
         {% if user.is_authenticated %}
           {% if not user.profile.is_guest %}
           <a href="{% url 'user_list' %}" class="nav-link">Contacts</a>
-          <a href="{% url 'blog_create' %}" class="nav-link">+ New topic</a>
-          <a href="{% url 'poll_create' %}" class="nav-link">Create Poll</a>
-          {% endif %}
-          {% if user.is_staff %}
-          <a href="{% url 'register' %}" class="nav-link">+ User</a>
+          <div class="nav-new-wrap" id="nav-new-wrap">
+            <button class="nav-new-btn" id="nav-new-btn" aria-haspopup="true" aria-expanded="false">
+              + New <span class="nav-new-arrow">▼</span>
+            </button>
+            <div class="nav-new-dropdown" role="menu">
+              <a href="{% url 'blog_create' %}" class="nav-new-item" role="menuitem">Topic</a>
+              <a href="{% url 'poll_create' %}" class="nav-new-item" role="menuitem">Poll</a>
+              {% if user.is_staff %}
+              <a href="{% url 'register' %}" class="nav-new-item" role="menuitem">User</a>
+              {% endif %}
+            </div>
+          </div>
           {% endif %}
           <a href="{% url 'profile' user.username %}" class="nav-link">{{ user.username }}</a>
           <!-- Scroll icon: desktop only, hidden on mobile via CSS -->
@@ -231,6 +238,25 @@
 </div>
 
 <script src="{% static 'blogapp/js/main.js' %}"></script>
+<script>
+(function () {
+  var wrap = document.getElementById('nav-new-wrap');
+  var btn  = document.getElementById('nav-new-btn');
+  if (!wrap || !btn) return;
+
+  function open()  { wrap.classList.add('open');    btn.setAttribute('aria-expanded', 'true'); }
+  function close() { wrap.classList.remove('open'); btn.setAttribute('aria-expanded', 'false'); }
+  function toggle(){ wrap.classList.contains('open') ? close() : open(); }
+
+  btn.addEventListener('click', function (e) { e.stopPropagation(); toggle(); });
+  document.addEventListener('click', function (e) {
+    if (!wrap.contains(e.target)) close();
+  });
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape') close();
+  });
+})();
+</script>
 {% block extra_js %}{% endblock %}
 </body>
 </html>
