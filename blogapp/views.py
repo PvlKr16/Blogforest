@@ -9,7 +9,7 @@ from django.http import Http404, JsonResponse
 from django.core.paginator import Paginator
 from django.views.decorators.http import require_POST
 
-from .models import Blog, Post, Comment, Tag, PostFile, BlogFile, BlogRead, Poll, PollOption, PollVote
+from .models import Blog, Post, Comment, Tag, PostFile, BlogFile, BlogRead, Poll, PollOption, PollVote, get_unread_blogs
 from .forms import (
     RegistrationForm, LoginForm, BlogForm, PostForm,
     CommentForm, SearchForm, AddMemberForm,
