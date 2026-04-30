@@ -377,9 +377,6 @@ def blog_remove_member(request, pk, user_id):
 
 # ─── Posts ───────────────────────────────────────────────────────────────────
 
-# post_detail removed — comments live on blog_detail page
-
-
 @login_required
 def post_create(request, blog_pk):
     blog = get_object_or_404(Blog, pk=blog_pk)
@@ -720,7 +717,7 @@ def profile(request, username):
 @login_required
 def poll_create(request):
     """
-    Создание опроса: одновременно создаётся Blog (тема) с префиксом «Опрос:»
+    Создание опроса: одновременно создаётся Blog (тема) с префиксом «Poll:»
     и привязанный к нему Poll с вариантами ответов.
     """
     if request.method == 'POST':
@@ -742,7 +739,7 @@ def poll_create(request):
                 # 1. Создаём тему (Blog)
                 title = form.cleaned_data['title']
                 blog = Blog.objects.create(
-                    title=f'Опрос: {title}',
+                    title=f'Poll: {title}',
                     description=form.cleaned_data.get('description', ''),
                     body='',
                     owner=request.user,
@@ -821,6 +818,13 @@ def poll_vote(request, poll_pk):
     # Авто-добавление голосующего в участники (чтобы мог следить за темой)
     if request.user != blog.owner:
         blog.members.add(request.user)
+
+    all_member_ids = list(blog.members.values_list('pk', flat=True))
+    all_member_ids.append(blog.owner_id)
+    BlogRead.objects.filter(
+        blog=blog,
+        user__in=all_member_ids,
+    ).exclude(user=request.user).delete()
 
     messages.success(request, 'Your vote has been recorded.')
     return redirect('blog_detail', pk=blog.pk)

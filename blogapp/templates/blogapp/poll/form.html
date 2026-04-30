@@ -30,7 +30,7 @@
             <label class="form-label" for="{{ form.title.id_for_label }}">{{ form.title.label }}</label>
             {{ form.title }}
             {% if form.title.errors %}<ul class="errorlist">{% for e in form.title.errors %}<li>{{ e }}</li>{% endfor %}</ul>{% endif %}
-            <div class="form-text">The topic will be listed as <em>«Опрос: &lt;title&gt;»</em></div>
+            <div class="form-text">The topic will be listed as <em>«Poll: &lt;title&gt;»</em></div>
           </div>
 
           <div class="form-group">
