@@ -982,7 +982,7 @@ textarea.form-control { resize: vertical; min-height: 100px; }
   margin-top: auto;
   background: var(--accent-1);
   color: rgba(255,255,255,.75);
-  padding: 28px 0;
+  padding: 5px 0;
   font-size: .85rem;
   text-align: center;
 }
