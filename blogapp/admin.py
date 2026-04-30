@@ -30,11 +30,11 @@ admin.site.register(User, CustomUserAdmin)
 
 # ── App models ────────────────────────────────────────────────────────────────
 
-@admin.register(Tag)
-class TagAdmin(admin.ModelAdmin):
-    list_display = ('name', 'slug')
-    prepopulated_fields = {'slug': ('name',)}
-    search_fields = ('name',)
+# @admin.register(Tag)
+# class TagAdmin(admin.ModelAdmin):
+#     list_display = ('name', 'slug')
+#     prepopulated_fields = {'slug': ('name',)}
+#     search_fields = ('name',)
 
 
 class PostFileInline(admin.TabularInline):
@@ -80,8 +80,8 @@ class BlogAdmin(admin.ModelAdmin):
     member_count.short_description = 'Members'
 
 
-@admin.register(Comment)
-class CommentAdmin(admin.ModelAdmin):
-    list_display = ('author', 'post', 'created_at')
-    list_filter = ('created_at',)
-    search_fields = ('author__username', 'content', 'post__title')
+# @admin.register(Comment)
+# class CommentAdmin(admin.ModelAdmin):
+#     list_display = ('author', 'post', 'created_at')
+#     list_filter = ('created_at',)
+#     search_fields = ('author__username', 'content', 'post__title')

@@ -9,7 +9,7 @@ from django.http import Http404, JsonResponse
 from django.core.paginator import Paginator
 from django.views.decorators.http import require_POST
 
-from .models import Blog, Post, Comment, Tag, PostFile, BlogFile, BlogRead, Poll, PollOption, PollVote, get_unread_blogs
+from .models import Blog, Post, PostFile, BlogFile, BlogRead, Poll, PollOption, PollVote, get_unread_blogs
 from .forms import (
     RegistrationForm, LoginForm, BlogForm, PostForm,
     CommentForm, SearchForm, AddMemberForm,
@@ -178,16 +178,15 @@ def home(request):
 
     # Sidebar data
     sidebar_blogs = visible_blogs.order_by('-created_at')[:8]
-    popular_tags = Tag.objects.filter(
-        post__blog__in=visible_blogs,
-        post__is_published=True
-    ).distinct()[:20]
+    # popular_tags = Tag.objects.filter(
+    #     post__blog__in=visible_blogs,
+    #     post__is_published=True
+    # ).distinct()[:20]
 
     return render(request, 'blogapp/home.html', {
         'items': items,
         'is_search': is_search,
         'sidebar_blogs': sidebar_blogs,
-        'popular_tags': popular_tags,
         'search_form': search_form,
         'query': query,
         'active_scopes': active_scopes,
@@ -555,22 +554,22 @@ def unread_view(request):
 
 # ─── Tags ─────────────────────────────────────────────────────────────────────
 
-@login_required
-def tag_posts(request, slug):
-    tag = get_object_or_404(Tag, slug=slug)
-    visible_blogs = get_visible_blogs(request.user)
-
-    posts = Post.objects.filter(
-        tags=tag, blog__in=visible_blogs, is_published=True
-    ).select_related('author', 'blog')
-
-    paginator = Paginator(posts, 10)
-    page = request.GET.get('page')
-    posts_page = paginator.get_page(page)
-
-    return render(request, 'blogapp/tag_posts.html', {
-        'tag': tag, 'posts': posts_page
-    })
+# @login_required
+# def tag_posts(request, slug):
+#     tag = get_object_or_404(Tag, slug=slug)
+#     visible_blogs = get_visible_blogs(request.user)
+#
+#     posts = Post.objects.filter(
+#         tags=tag, blog__in=visible_blogs, is_published=True
+#     ).select_related('author', 'blog')
+#
+#     paginator = Paginator(posts, 10)
+#     page = request.GET.get('page')
+#     posts_page = paginator.get_page(page)
+#
+#     return render(request, 'blogapp/tag_posts.html', {
+#         'tag': tag, 'posts': posts_page
+#     })
 
 
 # ─── Unread topics ────────────────────────────────────────────────────────────
