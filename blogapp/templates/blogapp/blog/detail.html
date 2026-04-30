@@ -130,7 +130,8 @@
 {% comment %}Tags hidden{% endcomment %}
           {% with post_files=post.files.all %}
           {% if post_files %}
-          <div style="margin-top:14px;">
+          <div style="margin-top:14px; margin-bottom:4px;">
+            <h3 style="font-size:1.05rem; margin-bottom:16px;">📎 Attachments</h3>
             <div class="attachment-grid">
               {% for pf in post_files %}
               {% with ptype=pf.original_name|file_preview_type %}

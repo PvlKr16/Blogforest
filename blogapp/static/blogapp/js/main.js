@@ -312,9 +312,9 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // Click opens file picker (input already covers the zone with opacity:0)
     input.addEventListener('change', function () {
-      addFiles(this.files);
-      // Reset input so same file can be re-added after removal
+      const snapshot = Array.from(this.files);
       this.value = '';
+      addFiles(snapshot);
     });
 
     // Drag events
