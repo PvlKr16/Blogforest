@@ -641,13 +641,8 @@ def unread_count_api(request):
 @login_required
 @require_POST
 def mark_unread(request, pk):
-    from django.utils import timezone
     blog = get_object_or_404(Blog, pk=pk)
-    # Set last_read_at to epoch so any post appears newer than it
-    BlogRead.objects.update_or_create(
-        user=request.user, blog=blog,
-        defaults={'last_read_at': timezone.datetime(2000, 1, 1, tzinfo=timezone.utc)}
-    )
+    BlogRead.objects.filter(user=request.user, blog=blog).delete()
     messages.success(request, f'"{blog.title}" marked as unread.')
     return redirect('unread_blogs')
 
