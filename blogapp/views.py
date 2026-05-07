@@ -20,6 +20,13 @@ from .forms import (
 )
 
 
+def guest_required(view_func):
+    def wrapper(request, *args, **kwargs):
+        if request.user.is_guest:
+            return redirect('/home/')
+        return view_func(request, *args, **kwargs)
+    return wrapper
+
 def get_visible_blogs(user):
     """
     Return the queryset of blogs visible to the given user.
@@ -196,7 +203,6 @@ def home(request):
 # ─── Blogs ───────────────────────────────────────────────────────────────────
 
 @login_required
-@login_required
 def blog_list(request):
     blogs = get_visible_blogs(request.user).order_by('-created_at')
 
@@ -209,12 +215,17 @@ def blog_list(request):
 @login_required
 def blog_detail(request, pk):
     blog = get_object_or_404(Blog, pk=pk)
+    is_guest = getattr(getattr(request.user, 'profile', None), 'is_guest', False)
+
+    if is_guest and request.user not in blog.members.all():
+        return redirect('/')
+
     if not blog.can_view(request.user):
         raise Http404
     # Guests can only view blogs they are members of
-    is_guest = getattr(getattr(request.user, 'profile', None), 'is_guest', False)
-    if is_guest and not blog.is_member(request.user):
-        raise Http404
+    # is_guest = getattr(getattr(request.user, 'profile', None), 'is_guest', False)
+    # if is_guest and not blog.is_member(request.user):
+    #     raise Http404
 
     # Mark as read when the topic is opened
     if request.user.is_authenticated:
