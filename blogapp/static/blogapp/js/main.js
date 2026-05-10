@@ -81,19 +81,31 @@ document.addEventListener('DOMContentLoaded', function () {
   // ── Unread count polling ─────────────────────────────────────
 (function () {
   const btns = document.querySelectorAll('.nav-scroll-btn');
-  if (!btns.length) return; // not logged in
+  if (!btns.length) return;
 
   let prevCount = null;
+  let audioCtx = null;
+
+  // creating AudioContext at once
+  function ensureAudio() {
+    if (!audioCtx) {
+      audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    }
+    if (audioCtx.state === 'suspended') {
+      audioCtx.resume();
+    }
+  }
+  document.addEventListener('click', ensureAudio, { once: false });
+  document.addEventListener('keydown', ensureAudio, { once: false });
 
   function playDing() {
+    if (!audioCtx || audioCtx.state !== 'running') return;
     try {
-      const ctx = new (window.AudioContext || window.webkitAudioContext)();
-
       function tone(freq, startTime, duration, gainVal) {
-        const osc  = ctx.createOscillator();
-        const gain = ctx.createGain();
+        const osc  = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
         osc.connect(gain);
-        gain.connect(ctx.destination);
+        gain.connect(audioCtx.destination);
         osc.type = 'sine';
         osc.frequency.setValueAtTime(freq, startTime);
         gain.gain.setValueAtTime(0, startTime);
@@ -102,11 +114,10 @@ document.addEventListener('DOMContentLoaded', function () {
         osc.start(startTime);
         osc.stop(startTime + duration);
       }
-
-      const t = ctx.currentTime;
-      tone(1318, t,        0.6, 0.15); // E6
-      tone(1568, t + 0.12, 0.5, 0.10); // G6
-      tone(2093, t + 0.22, 0.8, 0.08); // C7
+      const t = audioCtx.currentTime;
+      tone(1318, t,        0.6, 0.15);
+      tone(1568, t + 0.12, 0.5, 0.10);
+      tone(2093, t + 0.22, 0.8, 0.08);
     } catch (e) {}
   }
 
