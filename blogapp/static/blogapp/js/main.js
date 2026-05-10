@@ -3,6 +3,25 @@
    Global UI behaviour: mobile nav, search dropdown, password toggle
    ================================================================ */
 
+// ── Unread page: auto-reload on count change ──────────────────
+window.initUnreadPagePolling = function () {
+  let prevCount = null;
+  function check() {
+    fetch('/api/unread-count/', { credentials: 'same-origin' })
+      .then(r => r.ok ? r.json() : null)
+      .then(data => {
+        if (!data) return;
+        if (prevCount !== null && data.count !== prevCount) {
+          location.reload();
+        }
+        prevCount = data.count;
+      })
+      .catch(() => {});
+  }
+  check();
+  setInterval(check, 60000);
+};
+
 document.addEventListener('DOMContentLoaded', function () {
 
   // ── Mobile nav burger ─────────────────────────────────────────
@@ -60,39 +79,70 @@ document.addEventListener('DOMContentLoaded', function () {
   }
 
   // ── Unread count polling ─────────────────────────────────────
-  (function () {
-    const badges = document.querySelectorAll('.nav-scroll-badge');
-    const btns   = document.querySelectorAll('.nav-scroll-btn');
-    if (!btns.length) return; // not logged in
+(function () {
+  const btns = document.querySelectorAll('.nav-scroll-btn');
+  if (!btns.length) return; // not logged in
 
-    function updateBadges(count) {
-      btns.forEach(btn => {
-        let badge = btn.querySelector('.nav-scroll-badge');
-        if (count > 0) {
-          if (!badge) {
-            badge = document.createElement('span');
-            badge.className = 'nav-scroll-badge';
-            btn.appendChild(badge);
-          }
-          badge.textContent = count;
-        } else {
-          if (badge) badge.remove();
+  let prevCount = null;
+
+  function playDing() {
+    try {
+      const ctx = new (window.AudioContext || window.webkitAudioContext)();
+
+      function tone(freq, startTime, duration, gainVal) {
+        const osc  = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(freq, startTime);
+        gain.gain.setValueAtTime(0, startTime);
+        gain.gain.linearRampToValueAtTime(gainVal, startTime + 0.01);
+        gain.gain.exponentialRampToValueAtTime(0.0001, startTime + duration);
+        osc.start(startTime);
+        osc.stop(startTime + duration);
+      }
+
+      const t = ctx.currentTime;
+      tone(1318, t,        0.6, 0.15); // E6
+      tone(1568, t + 0.12, 0.5, 0.10); // G6
+      tone(2093, t + 0.22, 0.8, 0.08); // C7
+    } catch (e) {}
+  }
+
+  function updateBadges(count) {
+    if (prevCount !== null && count > prevCount) {
+      playDing();
+    }
+    prevCount = count;
+
+    btns.forEach(btn => {
+      let badge = btn.querySelector('.nav-scroll-badge');
+      if (count > 0) {
+        if (!badge) {
+          badge = document.createElement('span');
+          badge.className = 'nav-scroll-badge';
+          btn.appendChild(badge);
         }
-      });
-    }
+        badge.textContent = count;
+      } else {
+        if (badge) badge.remove();
+      }
+    });
+  }
 
-    function poll() {
-      fetch('/api/unread-count/', { credentials: 'same-origin' })
-        .then(r => r.ok ? r.json() : null)
-        .then(data => { if (data) updateBadges(data.count); })
-        .catch(() => {});
-    }
+  function poll() {
+    fetch('/api/unread-count/', { credentials: 'same-origin' })
+      .then(r => r.ok ? r.json() : null)
+      .then(data => { if (data) updateBadges(data.count); })
+      .catch(() => {});
+  }
 
-    // Poll every 60 seconds
-    setInterval(poll, 60000);
-  })();
+  poll();
+  setInterval(poll, 60000);
+})();
 
-  // ── Password toggle ───────────────────────────────────────────
+// ── Password toggle ───────────────────────────────────────────
   document.querySelectorAll('.password-toggle').forEach(function (btn) {
     btn.addEventListener('click', function () {
       const input = btn.closest('.password-wrap').querySelector('input');
@@ -102,8 +152,7 @@ document.addEventListener('DOMContentLoaded', function () {
     });
   });
 
-
-  // ── Settings panel ───────────────────────────────────────────
+// ── Settings panel ───────────────────────────────────────────
   const settingsPanel   = document.getElementById('settings-panel');
   const settingsOverlay = document.getElementById('settings-overlay');
   const settingsBtnD    = document.getElementById('settings-btn-desktop');
