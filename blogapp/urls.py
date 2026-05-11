@@ -15,6 +15,7 @@ urlpatterns = [
     path('blogs/<int:pk>/', views.blog_detail, name='blog_detail'),
     path('blogs/<int:pk>/edit/', views.blog_edit, name='blog_edit'),
     path('blogs/<int:pk>/delete/', views.blog_delete, name='blog_delete'),
+    path('api/blogs/<int:pk>/post-count/', views.blog_post_count_api, name='blog_post_count_api'),
 
     # Members
     path('blogs/<int:pk>/add-member/', views.blog_add_member, name='blog_add_member'),

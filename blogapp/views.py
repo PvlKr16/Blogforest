@@ -199,6 +199,14 @@ def home(request):
         'active_scopes': active_scopes,
     })
 
+@login_required
+def blog_post_count_api(request, pk):
+    from django.http import JsonResponse
+    blog = get_object_or_404(Blog, pk=pk)
+    if not blog.can_view(request.user):
+        raise Http404
+    count = blog.posts.filter(is_published=True).count()
+    return JsonResponse({'count': count})
 
 # ─── Blogs ───────────────────────────────────────────────────────────────────
 
