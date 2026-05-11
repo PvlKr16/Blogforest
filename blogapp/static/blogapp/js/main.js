@@ -4,22 +4,13 @@
    ================================================================ */
 
 // ── Unread page: auto-reload on count change ──────────────────
+// Подписывается на badge polling — без отдельного fetch
 window.initUnreadPagePolling = function () {
-  let prevCount = null;
-  function check() {
-    fetch('/api/unread-count/', { credentials: 'same-origin' })
-      .then(r => r.ok ? r.json() : null)
-      .then(data => {
-        if (!data) return;
-        if (prevCount !== null && data.count !== prevCount) {
-          location.reload();
-        }
-        prevCount = data.count;
-      })
-      .catch(() => {});
-  }
-  check();
-  setInterval(check, 60000);
+  window._onUnreadChange = function (newCount, oldCount) {
+    if (oldCount !== null && newCount !== oldCount) {
+      location.reload();
+    }
+  };
 };
 
 document.addEventListener('DOMContentLoaded', function () {
@@ -41,14 +32,12 @@ document.addEventListener('DOMContentLoaded', function () {
 
     function openDropdown() {
       dropdown.style.display = 'block';
-      // Force reflow so CSS transition fires from the initial state
       dropdown.getBoundingClientRect();
       dropdown.classList.add('search-dropdown-open');
     }
 
     function closeDropdown() {
       dropdown.classList.remove('search-dropdown-open');
-      // Hide after the slide-up transition finishes
       dropdown.addEventListener('transitionend', function hide() {
         if (!dropdown.classList.contains('search-dropdown-open')) {
           dropdown.style.display = 'none';
@@ -57,113 +46,107 @@ document.addEventListener('DOMContentLoaded', function () {
       });
     }
 
-    // Open when user focuses the search input
     input.addEventListener('focus', openDropdown);
 
-    // Close when clicking anywhere outside the wrapper
     document.addEventListener('mousedown', function (e) {
-      if (!wrapper.contains(e.target)) {
-        closeDropdown();
-      }
+      if (!wrapper.contains(e.target)) closeDropdown();
     });
 
-    // Prevent clicks inside the dropdown from bubbling to the document listener
     dropdown.addEventListener('mousedown', function (e) {
       e.stopPropagation();
     });
 
-    // If the page loaded with an active query, show the panel immediately
-    if (input.value.trim()) {
-      openDropdown();
-    }
+    if (input.value.trim()) openDropdown();
   }
 
-  // ── Unread count polling ─────────────────────────────────────
-(function () {
-  const btns = document.querySelectorAll('.nav-scroll-btn');
-  if (!btns.length) return;
+// ── Unread count polling ──────────────────────────────────────
+  (function () {
+    const btns = document.querySelectorAll('.nav-scroll-btn');
+    if (!btns.length) return;
 
-  let prevCount = null;
-  let audioCtx = null;
+    let prevCount = null;
+    let dingAudio = null;
 
-  // creating AudioContext at once
-  function ensureAudio() {
-    if (!audioCtx) {
-      audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-    }
-    if (audioCtx.state === 'suspended') {
-      audioCtx.resume();
-    }
-  }
-  document.addEventListener('click', ensureAudio, { once: false });
-  document.addEventListener('keydown', ensureAudio, { once: false });
-
-  function playDing() {
-    if (!audioCtx || audioCtx.state !== 'running') return;
-    try {
-      function tone(freq, startTime, duration, gainVal) {
-        const osc  = audioCtx.createOscillator();
-        const gain = audioCtx.createGain();
-        osc.connect(gain);
-        gain.connect(audioCtx.destination);
-        osc.type = 'sine';
-        osc.frequency.setValueAtTime(freq, startTime);
-        gain.gain.setValueAtTime(0, startTime);
-        gain.gain.linearRampToValueAtTime(gainVal, startTime + 0.01);
-        gain.gain.exponentialRampToValueAtTime(0.0001, startTime + duration);
-        osc.start(startTime);
-        osc.stop(startTime + duration);
-      }
-      const t = audioCtx.currentTime;
-      tone(1318, t,        0.6, 0.15);
-      tone(1568, t + 0.12, 0.5, 0.10);
-      tone(2093, t + 0.22, 0.8, 0.08);
-    } catch (e) {}
-  }
-
-  function updateBadges(count) {
-    if (prevCount !== null && count > prevCount) {
-      playDing();
-    }
-    prevCount = count;
-
-    btns.forEach(btn => {
-      let badge = btn.querySelector('.nav-scroll-badge');
-      if (count > 0) {
-        if (!badge) {
-          badge = document.createElement('span');
-          badge.className = 'nav-scroll-badge';
-          btn.appendChild(badge);
+    (function buildAudio() {
+      try {
+        const sampleRate = 44100;
+        const numSamples = Math.floor(sampleRate * 0.9);
+        const buf  = new ArrayBuffer(44 + numSamples * 2);
+        const view = new DataView(buf);
+        [0x52,0x49,0x46,0x46].forEach((b,i) => view.setUint8(i, b));
+        view.setUint32(4, 36 + numSamples * 2, true);
+        [0x57,0x41,0x56,0x45].forEach((b,i) => view.setUint8(8  + i, b));
+        [0x66,0x6d,0x74,0x20].forEach((b,i) => view.setUint8(12 + i, b));
+        view.setUint32(16, 16, true); view.setUint16(20, 1, true);
+        view.setUint16(22,  1, true); view.setUint32(24, sampleRate, true);
+        view.setUint32(28, sampleRate * 2, true); view.setUint16(32, 2, true);
+        view.setUint16(34, 16, true);
+        [0x64,0x61,0x74,0x61].forEach((b,i) => view.setUint8(36 + i, b));
+        view.setUint32(40, numSamples * 2, true);
+        for (let i = 0; i < numSamples; i++) {
+          const t = i / sampleRate;
+          const s = Math.exp(-t * 5) * 0.25 * (
+            Math.sin(2 * Math.PI * 1318 * t) * 0.5 +
+            Math.sin(2 * Math.PI * 1568 * t) * 0.3 +
+            Math.sin(2 * Math.PI * 2093 * t) * 0.2
+          );
+          view.setInt16(44 + i * 2, Math.max(-32767, Math.min(32767, s * 32767)), true);
         }
-        badge.textContent = count;
-      } else {
-        if (badge) badge.remove();
+        dingAudio = new Audio(URL.createObjectURL(new Blob([buf], { type: 'audio/wav' })));
+        dingAudio.volume = 0.4;
+        dingAudio.preload = 'auto';
+      } catch (e) {};
+    })();
+
+    function playDing() {
+      if (!dingAudio) return;
+      dingAudio.currentTime = 0;
+      dingAudio.play().catch(() => {});
+    }
+
+    function updateBadges(count) {
+      if (prevCount !== null && count > prevCount) playDing();
+      if (typeof window._onUnreadChange === 'function') {
+        window._onUnreadChange(count, prevCount);
       }
-    });
-  }
+      prevCount = count;
+      btns.forEach(btn => {
+        let badge = btn.querySelector('.nav-scroll-badge');
+        if (count > 0) {
+          if (!badge) {
+            badge = document.createElement('span');
+            badge.className = 'nav-scroll-badge';
+            btn.appendChild(badge);
+          }
+          badge.textContent = count;
+        } else {
+          if (badge) badge.remove();
+        }
+      });
+    }
 
-  function poll() {
-    fetch('/api/unread-count/', { credentials: 'same-origin' })
-      .then(r => r.ok ? r.json() : null)
-      .then(data => { if (data) updateBadges(data.count); })
-      .catch(() => {});
-  }
+    function poll() {
+      fetch('/api/unread-count/', { credentials: 'same-origin' })
+        .then(r => r.ok ? r.json() : null)
+        .then(data => { if (data) updateBadges(data.count); })
+        .catch(() => {});
+    }
 
-  poll();
-  setInterval(poll, 60000);
-})();
+    poll();
+    setInterval(poll, 60000);
+  })();
 
-// ── Password toggle ───────────────────────────────────────────
+  // ── Password toggle ───────────────────────────────────────────
   document.querySelectorAll('.password-toggle').forEach(function (btn) {
     btn.addEventListener('click', function () {
-      const input = btn.closest('.password-wrap').querySelector('input');
+      const input   = btn.closest('.password-wrap').querySelector('input');
       const isHidden = input.type === 'password';
       input.type = isHidden ? 'text' : 'password';
       btn.classList.toggle('visible', isHidden);
     });
   });
 
-// ── Settings panel ───────────────────────────────────────────
+  // ── Settings panel ────────────────────────────────────────────
   const settingsPanel   = document.getElementById('settings-panel');
   const settingsOverlay = document.getElementById('settings-overlay');
   const settingsBtnD    = document.getElementById('settings-btn-desktop');
@@ -183,23 +166,19 @@ document.addEventListener('DOMContentLoaded', function () {
     colorSubmenu?.classList.remove('open');
   }
 
-  [settingsBtnD].forEach(btn => {
-    btn?.addEventListener('click', function (e) {
-      e.stopPropagation();
-      settingsPanel?.classList.contains('open') ? closeSettings() : openSettings();
-    });
+  settingsBtnD?.addEventListener('click', function (e) {
+    e.stopPropagation();
+    settingsPanel?.classList.contains('open') ? closeSettings() : openSettings();
   });
 
   settingsOverlay?.addEventListener('click', closeSettings);
 
-  // Colors submenu toggle
   colorsMenuItem?.addEventListener('click', function () {
     const isOpen = colorSubmenu?.classList.contains('open');
     colorSubmenu?.classList.toggle('open', !isOpen);
     colorsMenuItem?.classList.toggle('submenu-open', !isOpen);
   });
 
-  // Apply theme: set data-theme attribute and update swatch active state
   function applyTheme(theme) {
     if (!theme || theme === 'emerald') {
       document.documentElement.removeAttribute('data-theme');
@@ -211,16 +190,13 @@ document.addEventListener('DOMContentLoaded', function () {
     });
   }
 
-  // Read current theme from <html data-theme> set by server (no localStorage needed)
   const currentTheme = document.documentElement.getAttribute('data-theme') || 'emerald';
   applyTheme(currentTheme);
 
-  // Color scheme picker — save to server so it persists across devices and sessions
   document.querySelectorAll('.color-scheme-option').forEach(option => {
     option.addEventListener('click', function () {
       const theme = this.dataset.theme;
       applyTheme(theme);
-      // Persist on server via POST (CSRF token from cookie)
       const csrf = document.cookie.match(/csrftoken=([^;]+)/);
       if (csrf) {
         fetch('/set-theme/', {
@@ -235,11 +211,10 @@ document.addEventListener('DOMContentLoaded', function () {
     });
   });
 
-  // ── Quote tooltip ────────────────────────────────────────────
+  // ── Quote tooltip ─────────────────────────────────────────────
   (function () {
     if (!document.querySelector('.quote-source')) return;
 
-    // Derive post_create URL from current page: /blogs/<pk>/ → /blogs/<pk>/posts/create/
     var pathMatch = window.location.pathname.match(/\/blogs\/(\d+)/);
     if (!pathMatch) return;
     var createUrl = '/blogs/' + pathMatch[1] + '/posts/create/';
@@ -253,11 +228,11 @@ document.addEventListener('DOMContentLoaded', function () {
 
     function showTooltip(x, y, text, authorId) {
       clearTimeout(hideTimer);
-      tooltip.dataset.text = text;
+      tooltip.dataset.text     = text;
       tooltip.dataset.authorId = authorId || '';
-      tooltip.style.left = x + 'px';
-      tooltip.style.top  = (y + window.scrollY - 44) + 'px';
-      tooltip.style.display = 'block';
+      tooltip.style.left       = x + 'px';
+      tooltip.style.top        = (y + window.scrollY - 44) + 'px';
+      tooltip.style.display    = 'block';
     }
 
     function hideTooltip() {
@@ -271,11 +246,11 @@ document.addEventListener('DOMContentLoaded', function () {
       var text = sel.toString().trim();
       if (text.length < 3) { hideTooltip(); return; }
 
-      // Walk up DOM to find .quote-source
-      var node = sel.anchorNode;
+      var node   = sel.anchorNode;
       var source = null;
       while (node && node !== document.body) {
-        if (node.nodeType === 1 && node.classList && node.classList.contains('quote-source')) {
+        if (node.nodeType === 1 && node.classList &&
+            node.classList.contains('quote-source')) {
           source = node; break;
         }
         node = node.parentNode;
@@ -283,8 +258,8 @@ document.addEventListener('DOMContentLoaded', function () {
       if (!source) { hideTooltip(); return; }
 
       var authorId = source.dataset.authorId || '';
-      var range = sel.getRangeAt(0);
-      var rect  = range.getBoundingClientRect();
+      var range    = sel.getRangeAt(0);
+      var rect     = range.getBoundingClientRect();
       showTooltip(rect.left + rect.width / 2, rect.top, text, authorId);
     });
 
@@ -294,9 +269,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     tooltip.addEventListener('mouseenter', function () { clearTimeout(hideTimer); });
     tooltip.addEventListener('mouseleave', hideTooltip);
-
-    // preventDefault stops mousedown from collapsing the selection
-    tooltip.addEventListener('mousedown', function (e) { e.preventDefault(); });
+    tooltip.addEventListener('mousedown',  function (e) { e.preventDefault(); });
 
     tooltip.addEventListener('click', function () {
       var text     = tooltip.dataset.text;
@@ -312,11 +285,10 @@ document.addEventListener('DOMContentLoaded', function () {
   })();
 
   // ── Drag & Drop file zones ────────────────────────────────────
-  const MAX_FILE_MB = 5;
-  const MAX_BYTES = MAX_FILE_MB * 1024 * 1024;
+  const MAX_BYTES = 5 * 1024 * 1024;
 
   function formatBytes(bytes) {
-    if (bytes < 1024) return bytes + ' B';
+    if (bytes < 1024)        return bytes + ' B';
     if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
     return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
   }
@@ -326,7 +298,6 @@ document.addEventListener('DOMContentLoaded', function () {
     const input = dropzoneEl.querySelector('.dropzone-input');
     if (!input) return;
 
-    // Track selected files (DataTransfer trick for merging picks)
     let selectedFiles = [];
 
     function syncInputFiles() {
@@ -360,9 +331,7 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     function addFiles(fileList) {
-      const incoming = Array.from(fileList);
-      // Merge — avoid duplicates by name+size
-      incoming.forEach(f => {
+      Array.from(fileList).forEach(f => {
         const dup = selectedFiles.some(s => s.name === f.name && s.size === f.size);
         if (!dup) selectedFiles.push(f);
       });
@@ -370,14 +339,12 @@ document.addEventListener('DOMContentLoaded', function () {
       renderList();
     }
 
-    // Click opens file picker (input already covers the zone with opacity:0)
     input.addEventListener('change', function () {
       const snapshot = Array.from(this.files);
       this.value = '';
       addFiles(snapshot);
     });
 
-    // Drag events
     dropzoneEl.addEventListener('dragenter', e => { e.preventDefault(); dropzoneEl.classList.add('drag-over'); });
     dropzoneEl.addEventListener('dragover',  e => { e.preventDefault(); dropzoneEl.classList.add('drag-over'); });
     dropzoneEl.addEventListener('dragleave', e => {
@@ -391,12 +358,10 @@ document.addEventListener('DOMContentLoaded', function () {
   }
 
   document.querySelectorAll('.dropzone').forEach(function (dz) {
-    const listId = dz.id + '-list';
-    const list = document.getElementById(listId);
-    initDropzone(dz, list);
+    initDropzone(dz, document.getElementById(dz.id + '-list'));
   });
 
-  // ── Poll: динамические варианты ответов ───────────────────────
+  // ── Poll: динамические варианты ответов ──────────────────────
   (function () {
     const container = document.getElementById('options-container');
     const addBtn    = document.getElementById('add-option');
@@ -414,7 +379,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     addBtn.addEventListener('click', function () {
       const row = document.createElement('div');
-      row.className = 'option-row';
+      row.className  = 'option-row';
       row.style.cssText = 'display:flex; gap:8px; align-items:center; margin-bottom:8px;';
       row.innerHTML =
         '<input type="text" name="option_text_' + counter + '" class="form-control"' +
