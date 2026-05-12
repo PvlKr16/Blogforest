@@ -8,9 +8,33 @@
 window.initUnreadPagePolling = function () {
   window._onUnreadChange = function (newCount, oldCount) {
     if (oldCount !== null && newCount !== oldCount) {
-      location.reload();
+      var reload = function () { location.reload(); };
+      typeof window._waitForDing === 'function'
+        ? window._waitForDing(reload)
+        : setTimeout(reload, 1000);
     }
   };
+};
+
+window.initBlogPolling = function (blogPk) {
+  var prevCount = null;
+  function check() {
+    fetch('/api/blogs/' + blogPk + '/post-count/', { credentials: 'same-origin' })
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (data) {
+        if (!data) return;
+        if (prevCount !== null && data.count !== prevCount) {
+          var reload = function () { location.reload(); };
+          typeof window._waitForDing === 'function'
+            ? window._waitForDing(reload)
+            : setTimeout(reload, 1000);
+        }
+        prevCount = data.count;
+      })
+      .catch(function () {});
+  }
+  check();
+  setInterval(check, 60000);
 };
 
 document.addEventListener('DOMContentLoaded', function () {
@@ -103,6 +127,15 @@ document.addEventListener('DOMContentLoaded', function () {
       dingAudio.currentTime = 0;
       dingAudio.play().catch(() => {});
     }
+
+    window._waitForDing = function (callback) {
+      if (!dingAudio || dingAudio.paused) {
+        callback();
+      } else {
+        dingAudio.addEventListener('ended', callback, { once: true });
+        setTimeout(callback, 1500);
+      }
+    };
 
     function updateBadges(count) {
       if (prevCount !== null && count > prevCount) playDing();

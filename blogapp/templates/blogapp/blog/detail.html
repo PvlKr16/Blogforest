@@ -345,24 +345,9 @@
 
 {% block extra_js %}
 <script>
-(function () {
-  var pk = {{ blog.pk }};
-  var prevCount = null;
-  function check() {
-    fetch('/api/blogs/' + pk + '/post-count/', { credentials: 'same-origin' })
-      .then(function (r) { return r.ok ? r.json() : null; })
-      .then(function (data) {
-        if (!data) return;
-        if (prevCount !== null && data.count !== prevCount) {
-          location.reload();
-        }
-        prevCount = data.count;
-      })
-      .catch(function () {});
-  }
-  check();
-  setInterval(check, 60000);
-})();
+document.addEventListener('DOMContentLoaded', function () {
+  window.initBlogPolling({{ blog.pk }});
+});
 </script>
 {% endblock %}
 
