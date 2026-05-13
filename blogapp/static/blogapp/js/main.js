@@ -4,18 +4,15 @@
    ================================================================ */
 
 // ── Unread page: auto-reload on count change ──────────────────
-// Подписывается на badge polling — без отдельного fetch
 window.initUnreadPagePolling = function () {
   window._onUnreadChange = function (newCount, oldCount) {
     if (oldCount !== null && newCount !== oldCount) {
-      var reload = function () { location.reload(); };
-      typeof window._waitForDing === 'function'
-        ? window._waitForDing(reload)
-        : setTimeout(reload, 1000);
+      location.reload();
     }
   };
 };
 
+// ── Blog detail page: auto-reload on new post ─────────────────
 window.initBlogPolling = function (blogPk) {
   var prevCount = null;
   function check() {
@@ -24,10 +21,7 @@ window.initBlogPolling = function (blogPk) {
       .then(function (data) {
         if (!data) return;
         if (prevCount !== null && data.count !== prevCount) {
-          var reload = function () { location.reload(); };
-          typeof window._waitForDing === 'function'
-            ? window._waitForDing(reload)
-            : setTimeout(reload, 1000);
+          location.reload();
         }
         prevCount = data.count;
       })
@@ -127,15 +121,6 @@ document.addEventListener('DOMContentLoaded', function () {
       dingAudio.currentTime = 0;
       dingAudio.play().catch(() => {});
     }
-
-    window._waitForDing = function (callback) {
-      if (!dingAudio || dingAudio.paused) {
-        callback();
-      } else {
-        dingAudio.addEventListener('ended', callback, { once: true });
-        setTimeout(callback, 1500);
-      }
-    };
 
     function updateBadges(count) {
       if (prevCount !== null && count > prevCount) playDing();
