@@ -847,3 +847,7 @@ def poll_vote(request, poll_pk):
 
     messages.success(request, 'Your vote has been recorded.')
     return redirect('blog_detail', pk=blog.pk)
+
+# HELP
+def help_view(request):
+    return render(request, 'blogapp/help.html')
