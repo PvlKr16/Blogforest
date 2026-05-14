@@ -46,4 +46,7 @@ urlpatterns = [
     # Polls
     path('polls/create/', views.poll_create, name='poll_create'),
     path('polls/<int:poll_pk>/vote/', views.poll_vote, name='poll_vote'),
+
+    # Help
+    path('help/', views.help_view, name='help'),
 ]
